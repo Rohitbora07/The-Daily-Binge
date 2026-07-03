@@ -74,6 +74,26 @@ const blogSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    isFeatured: {
+        type: Boolean,
+        default: false
+    },
+    readTime: {
+        type: Number,
+        default: 0
+    },
+    excerpt: {
+        type: String,
+        default: ''
+    },
+    trendingScore: {
+        type: Number,
+        default: 0
+    },
+    searchKeywords: {
+        type: [String],
+        default: []
+    }
 },{timestamps: true});
 
 blogSchema.index({author: 1});

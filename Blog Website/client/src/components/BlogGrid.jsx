@@ -1,5 +1,5 @@
 import { Globe, ArrowRight } from "lucide-react";
-import { BlogCard } from "./BlogCard";
+import BlogCard  from "../components/blog/BlogCard";
 
 // const BLOG_CARDS = [
 //     {

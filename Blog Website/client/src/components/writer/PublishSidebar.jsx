@@ -10,7 +10,7 @@ const categories = [
     "Law", "Religion", "Music", "Film", "Literature",
 ];
 
-export default function PublishSidebar({ onPublish, onDraft, setCategory, category, setVisibility, visibility, setAllowComments, allowComments, tags, setTags }) {
+export default function PublishSidebar({ onPublish, setCategory, category, setVisibility, visibility, setAllowComments, allowComments, tags, setTags }) {
     
     
 
@@ -26,7 +26,7 @@ export default function PublishSidebar({ onPublish, onDraft, setCategory, catego
 
                     <div className="space-y-3">
                         <button
-                            onClick={onPublish}
+                            onClick={() => onPublish({ status: "published" })}
                             className="w-full flex items-center justify-center gap-2 bg-[#0077CC] hover:bg-[#005FA3] text-white text-sm font-semibold px-5 py-3 rounded-xl transition-colors duration-200"
                         >
                             <Send size={15} />
@@ -35,7 +35,7 @@ export default function PublishSidebar({ onPublish, onDraft, setCategory, catego
 
                         <div className="flex gap-2.5">
                             <button
-                                onClick={onDraft}
+                                onClick={() => onPublish({ status: "draft" })}
                                 className="flex-1 flex items-center justify-center gap-2 bg-stone-50 hover:bg-stone-100 text-stone-700 text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 transition-colors"
                             >
                                 <FileText size={14} />

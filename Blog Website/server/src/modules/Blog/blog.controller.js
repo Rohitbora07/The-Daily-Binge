@@ -11,19 +11,19 @@ export const createBlog = async (req, res) => {
             return res.status(400).json({ success: false, message: "Unauthorized User" })
         }
 
-        const { title, content, category, tags, visibility, allowComments } = req.body
+        const { title, content, category, tags, visibility, allowComments, excerpt, status } = req.body
 
-        if (!title || !content || !category) return res.status(400).json({ success: false, message: "Missing required details" })
+        if (!title || !content || !category || !excerpt) return res.status(400).json({ success: false, message: "Missing required details" })
 
         if (!req.file) return res.status(400).json({ success: false, message: "Cover image is required" })
 
-            console.log(req.file)
+        console.log(req.file)
         const uploadImage = await cloudinary.uploader.upload(req.file.path,
             {
                 resource_type: 'image',
                 folder: "blogs"
             })
-            console.log("Uploaded Image:", uploadImage)
+        console.log("Uploaded Image:", uploadImage)
 
         // deletes the file from the local server after it is uploaded on cloudinary 
         await fs.unlink(req.file.path)
@@ -40,13 +40,14 @@ export const createBlog = async (req, res) => {
         const blog = await Blog.create({
             title,
             slug,
+            excerpt,
             content,
             category,
-            visibility,
+            visibility: status === "published" ? "public" : visibility || "private",
             tags: tags ? Array.isArray(tags) ? tags : tags.split(",").map(tag => tag.trim()) : [],
-            status:"published",
+            status: status || "draft",
             allowComments,
-            publishedAt: new Date(),
+            publishedAt: status === "published" ? new Date() : null,
             author: userId,
             coverImage: {
                 url: uploadImage.secure_url,
@@ -66,14 +67,14 @@ export const createBlog = async (req, res) => {
 
 export const getUserBlogs = async (req, res) => {
     try {
-        const {userId} = req.params
+        const { userId } = req.params
         if (!userId) {
             return res.status(400).json({ success: false, message: "Unauthorized User" })
         }
-        
+
         const blogs = await Blog.find({ author: userId }).sort({ createdAt: -1 })
         return res.status(200).json({ success: true, blogs })
-    }catch (err) {
+    } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({
             success: false,
@@ -83,10 +84,10 @@ export const getUserBlogs = async (req, res) => {
 }
 
 export const getAllBlogs = async (req, res) => {
-    try{
+    try {
         const blogs = await Blog.find().sort({ createdAt: -1 }).populate("author", "name email profileImg")
         return res.status(200).json({ success: true, blogs })
-    }catch (err) {
+    } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({
             success: false,
@@ -97,16 +98,16 @@ export const getAllBlogs = async (req, res) => {
 
 export const getSingleBlog = async (req, res) => {
     const { slug } = req.params
-    if(!slug){
+    if (!slug) {
         return res.status(400).json({ success: false, message: "Missing required details" })
     }
-    try{
-        const blog = await Blog.findOne({slug}).populate("author", "name email profileImg bio")
-        if(!blog){
+    try {
+        const blog = await Blog.findOne({ slug }).populate("author", "name email profileImg bio")
+        if (!blog) {
             return res.status(404).json({ success: false, message: "Blog not found" })
         }
         return res.status(200).json({ success: true, blog: blog })
-    }catch (err) {
+    } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({
             success: false,
@@ -117,17 +118,17 @@ export const getSingleBlog = async (req, res) => {
 
 export const deleteBlog = async (req, res) => {
     const { slug } = req.params
-    if(!slug){
+    if (!slug) {
         return res.status(400).json({ success: false, message: "Missing required details" })
     }
-    try{
-        const blog = await Blog.findOne({slug})
-        if(!blog){
+    try {
+        const blog = await Blog.findOne({ slug })
+        if (!blog) {
             return res.status(404).json({ success: false, message: "Blog not found" })
         }
 
         const userId = req.userId
-        if(blog.author.toString() !== userId){
+        if (blog.author.toString() !== userId) {
             return res.status(403).json({ success: false, message: "Unauthorized User" })
         }
 
@@ -135,7 +136,7 @@ export const deleteBlog = async (req, res) => {
         await blog.deleteOne()
         return res.status(200).json({ success: true, message: "Blog deleted successfully" })
 
-    }catch (err) {
+    } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({
             success: false,
@@ -146,40 +147,40 @@ export const deleteBlog = async (req, res) => {
 
 export const updateBlog = async (req, res) => {
     const { slug } = req.params
-    if(!slug){
+    if (!slug) {
         return res.status(400).json({ success: false, message: "Missing required details" })
     }
-    try{
-        const blog = await Blog.findOne({slug})
-        if(!blog){
+    try {
+        const blog = await Blog.findOne({ slug })
+        if (!blog) {
             return res.status(404).json({ success: false, message: "Blog not found" })
         }
 
         const userId = req.userId
-        if(blog.author.toString() !== userId){
+        if (blog.author.toString() !== userId) {
             return res.status(403).json({ success: false, message: "Unauthorized User" })
         }
 
         const { title, content, category, tags, visibility, allowComments } = req.body
 
-        if(title){
+        if (title) {
             blog.title = title
             blog.slug = slugify(title, {
                 lower: true,
                 strict: true
             })
         }
-        if(content) blog.content = content
-        if(category) blog.category = category
-        if(tags) blog.tags = Array.isArray(tags) ? tags : tags.split(",").map(tag => tag.trim())
-        if(visibility) blog.visibility = visibility
-        if(allowComments !== undefined) blog.allowComments = allowComments
+        if (content) blog.content = content
+        if (category) blog.category = category
+        if (tags) blog.tags = Array.isArray(tags) ? tags : tags.split(",").map(tag => tag.trim())
+        if (visibility) blog.visibility = visibility
+        if (allowComments !== undefined) blog.allowComments = allowComments
 
         await blog.save()
-        
+
         return res.status(200).json({ success: true, message: "Blog Updated successfully" })
 
-    }catch (err) {
+    } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({
             success: false,
@@ -190,13 +191,35 @@ export const updateBlog = async (req, res) => {
 
 export const getBlogsByCategory = async (req, res) => {
     const { category } = req.params
-    if(!category){
+    if (!category) {
         return res.status(400).json({ success: false, message: "Missing required details" })
     }
-    try{
-        const blogs = await Blog.find({category}).sort({ createdAt: -1 }).populate("author", "name email profileImg")
+    try {
+        const blogs = await Blog.find({ category }).sort({ createdAt: -1 }).populate("author", "name email profileImg")
         return res.status(200).json({ success: true, blogs })
-    }catch (err) {
+    } catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        })
+    }
+}
+
+export const uploadImage = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ success: false, message: "No image file provided" });
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: "blog/editor"
+        });
+
+        await fs.unlink(req.file.path);
+        return res.status(200).json({
+            success: true,
+            url: result.secure_url,
+            publicId: result.public_id
+        });
+    } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({
             success: false,

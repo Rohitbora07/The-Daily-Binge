@@ -8,7 +8,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { GET_SINGLE_BLOG } from "../constants/route";
 import api from "../api/axios";
-
+import BlogContent from "../components/blog/BlogContent";
 // const blog = {
 //     category: "Technology",
 //     title: "Why TypeScript Is No Longer Optional for Serious Projects",
@@ -38,7 +38,7 @@ export default function BlogDetails() {
         const getSingleBlog = async () => {
             try {
                 const { data } = await api.get(GET_SINGLE_BLOG(slug))
-                console.log(data.blog)
+                console.log(typeof data.blog.content)
                 setBlog(data.blog)
                 setAuthor(data.blog.author)
             } catch (error) {
@@ -51,6 +51,12 @@ export default function BlogDetails() {
     if (!blog) {
         return <div>Loading...</div>;
     }
+
+    const formattedDate = new Date(blog.publishedAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
 
     return (
         <motion.div
@@ -104,7 +110,7 @@ export default function BlogDetails() {
                         <div className="flex items-center gap-4 text-xs text-stone-500">
                             <span className="flex items-center gap-1.5">
                                 <Calendar size={13} className="text-stone-400" />
-                                {blog.publishedAt}
+                                {formattedDate}
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <Clock size={13} className="text-stone-400" />
@@ -135,7 +141,7 @@ export default function BlogDetails() {
                 </div>
             </motion.div>
 
-            {/* Body: share | article | toc */}
+            {/* Body: share | div | toc */}
             <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10">
                 <div className="flex gap-8 xl:gap-14 items-center justify-center">
 
@@ -144,8 +150,8 @@ export default function BlogDetails() {
                         <BlogShareBar />
                     </div>
 
-                    {/* Article body */}
-                    <article className="flex-1 min-w-0 max-w-2xl">
+                    {/* div body */}
+                    <div className="flex-1 min-w-0 max-w-5xl">
 
                         {/* Mobile share bar */}
                         <div className="flex lg:hidden items-center gap-3 mb-8 pb-6 border-b border-stone-100">
@@ -158,7 +164,8 @@ export default function BlogDetails() {
                             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
                         >
 
-                            <div>{blog.content}</div>
+                            {/* <BlogContent content={blog.content} /> */}
+                            <BlogContent content={JSON.parse(blog.content)} />
                         </div>
 
                         {/* Tags */}
@@ -184,7 +191,7 @@ export default function BlogDetails() {
                         <RelatedBlogs />
 
                         <div className="h-16" />
-                    </article>
+                    </div>
 
                 </div>
             </div>

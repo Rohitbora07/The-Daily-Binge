@@ -11,6 +11,7 @@ import UserProfile from './pages/UserProfile'
 import UpdateProfile from './pages/UpdateProfile'
 import DangerZone from './components/settings/DangerZone'
 import BlogDetails from './pages/BlogDetails'
+import BlogListing from './pages/BlogListing'
 function App() {
   const location = useLocation()
   const hideLayout = ["/sign-in", "/sign-up","my-blogs"].includes(location.pathname);
@@ -30,6 +31,7 @@ function App() {
       <Route path='/profile/security' element={<DangerZone />} />
       <Route path='/single' element={<BlogDetails />} />
       <Route path='/blog/:slug' element={<BlogDetails />} />
+      <Route path='/listing' element={<BlogListing />} />
     </Routes>
     {!hideLayout && <Footer />}
 

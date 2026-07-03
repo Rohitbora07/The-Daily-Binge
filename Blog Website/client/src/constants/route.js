@@ -7,5 +7,6 @@ export const USER_DETAIL_ROUTE = (userId) => `/user/profile/${userId}`
 
 export const CREATE_BLOG = "/blog/create"
 export const GET_ALL_BLOGS = "/blog/all"
+export const UPLOAD_IMAGE = "/blog/upload-image"
 export const GET_SINGLE_BLOG = (slug) => `/blog/${slug}`
 export const USER_BLOGS = (userId) => `/user/${userId}/blogs`

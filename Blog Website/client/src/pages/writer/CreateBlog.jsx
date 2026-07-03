@@ -19,7 +19,7 @@ const readTime = (words) => Math.max(1, Math.ceil(words / 200));
 
 export default function CreateBlog() {
     const [title, setTitle] = useState("");
-    const [subtitle, setSubtitle] = useState("");
+    const [excerpt, setExcerpt] = useState("");
     const [content, setContent] = useState(null);
     const [coverImage, setCoverImage] = useState(null);
     const [category, setCategory] = useState("");
@@ -47,17 +47,18 @@ export default function CreateBlog() {
     const words = wordCount(currentText);
     const minutes = readTime(words);
 
-    const handlePublish = async () => {
+    const handlePublish = async ({ status }) => {
         try {
             const formData = new FormData();
             formData.append("title", title);
-            formData.append("subtitle", subtitle); 
+            formData.append("excerpt", excerpt);
             formData.append("content", JSON.stringify(content));
             formData.append("category", category);
             tags.forEach(tag => {
                 formData.append("tags", tag);
             });
             formData.append("visibility", visibility);
+            formData.append("status", status);
             if (coverImage) formData.append("coverImage", coverImage);
             formData.append("allowComments", allowComments);
             
@@ -98,12 +99,12 @@ export default function CreateBlog() {
                         </div>
 
 
-                        <p className="text-3xl font-medium text-stone-500 mb-2 font-serif">Subtitle</p>
+                        <p className="text-3xl font-medium text-stone-500 mb-2 font-serif">Excerpt</p>
                         <div className="mb-8 border-2 border-stone-300 rounded-lg p-4">
                             <textarea
-                                value={subtitle}
-                                onChange={(e) => setSubtitle(e.target.value)}
-                                placeholder="A brief subtitle or description…"
+                                value={excerpt}
+                                onChange={(e) => setExcerpt(e.target.value)}
+                                placeholder="A brief excerpt or description…"
                                 rows={2}
                                 className="w-full resize-none outline-none text-stone-500 placeholder:text-stone-300 font-serif text-base"
                             />
@@ -142,7 +143,6 @@ export default function CreateBlog() {
 
                     <PublishSidebar
                         onPublish={handlePublish}
-                        onDraft={() => alert("Saved as draft.")}
                         setCategory={setCategory}
                         category={category}
                         setVisibility={setVisibility}

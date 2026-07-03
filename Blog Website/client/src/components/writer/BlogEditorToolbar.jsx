@@ -1,4 +1,6 @@
 import { Bold, Italic, Underline, Strikethrough, Heading2, Heading3, List, ListOrdered, Quote, Code, Code2, Link, Image, Minus, AlignLeft, AlignCenter, } from "lucide-react";
+import api from "../../api/axios";
+import {UPLOAD_IMAGE} from "../../constants/route"
 
 
 const Divider = () => (
@@ -41,11 +43,35 @@ export default function BlogEditorToolbar({ editor }) {
 
     // Helper to prompt for an image URL
     const addCustomImage = () => {
-        const url = window.prompt("Enter image URL");
-        if (url) {
-            editor.chain().focus().setImage({ src: url }).run();
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+
+        try {
+            const formData = new FormData();
+            formData.append("image", file);
+
+            const { data } = await api.post(UPLOAD_IMAGE, formData);
+            console.log(data)
+            editor
+                .chain()
+                .focus()
+                .setImage({
+                    src: data.url,
+                })
+                .run();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to upload image.");
         }
     };
+
+    input.click();
+};
 
     const tools = [
         [
