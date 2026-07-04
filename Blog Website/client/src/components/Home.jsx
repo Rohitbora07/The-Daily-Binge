@@ -6,10 +6,13 @@ import TrendingBlogs from './TrendingBlogs'
 import { useEffect, useState } from 'react'
 import api from '../api/axios'
 import { GET_ALL_BLOGS } from '../constants/route'
+import { Globe, ArrowRight } from "lucide-react"
+import { useNavigate } from 'react-router-dom'
 
 function Home() {
 
     const [blogs, setBlogs] = useState(null)
+    const navigate = useNavigate()
 
     useEffect(() => {
         const getAll = async () => {
@@ -47,7 +50,22 @@ function Home() {
                             <Sidebar />
                         </aside>
                         <div className="flex-1 min-w-0 order-1 lg:order-2 space-y-12">
-                            <FeaturedBlog blog={blogs[0]}  />
+                            <FeaturedBlog blog={blogs[0]} />
+                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-stone-200/60">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-7 h-7 rounded-lg border border-stone-300 flex items-center justify-center bg-stone-50/50">
+                                        <Globe size={13} className="text-[#0077CC]" />
+                                    </div>
+                                    <h2 className="text-xl font-serif font-medium tracking-tight text-stone-900">Latest Articles</h2>
+                                </div>
+
+                                <div
+                                    onClick={()=> navigate("/explore/latest")}
+                                    className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider py-2 px-3 rounded-3xl text-[#0077CC] hover:text-[#014c81] hover:bg-[#3c8ec8] transition-colors"
+                                >
+                                    View all <ArrowRight size={13} />
+                                </div>
+                            </div>
                             <BlogGrid blogs={blogs} />
                             <TrendingBlogs blogs={blogs} />
                         </div>

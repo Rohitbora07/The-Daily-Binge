@@ -42,7 +42,7 @@ export const createBlog = async (req, res) => {
             slug,
             excerpt,
             content,
-            category,
+            category: category.toLowerCase(),
             visibility: status === "published" ? "public" : visibility || "private",
             tags: tags ? Array.isArray(tags) ? tags : tags.split(",").map(tag => tag.trim()) : [],
             status: status || "draft",
@@ -196,7 +196,8 @@ export const getBlogsByCategory = async (req, res) => {
     }
     try {
         const blogs = await Blog.find({ category }).sort({ createdAt: -1 }).populate("author", "name email profileImg")
-        return res.status(200).json({ success: true, blogs })
+        if(!blogs || blogs.length === 0) return res.status(404).json({ success: false, message: "No blogs found for this category" })
+        return res.status(200).json({ success: true, blogs, message: `Blogs for category ${category} fetched successfully` })
     } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({

@@ -60,6 +60,16 @@ export default function BlogListing() {
 
     const categories = blogs && ["All", ...new Set(blogs.map(blog => blog.category))]
     const tags = blogs && [...new Set(blogs.map(blog => blog.tags).flat())].slice(0, 20);
+    const categoryMap = new Map()
+    if (blogs) {
+        for (const item of blogs) {
+            const categ = item.category;
+            categoryMap.set(categ, (categoryMap.get(categ) || 0) + 1)
+        }
+    }
+    
+    
+
     console.log(tags)
 
     if (!blogs) {
@@ -231,7 +241,7 @@ export default function BlogListing() {
                     </div>
 
                     {/* Sidebar */}
-                    <BlogSidebar tags = {tags} />
+                    <BlogSidebar tags={tags} categoryMap={categoryMap} />
                 </div>
             </div>
         </motion.div>

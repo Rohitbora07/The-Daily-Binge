@@ -32,22 +32,9 @@ const trendingPosts = [
     },
 ];
 
-const popularCategories = [
-    { name: "Technology", count: 48, color: "#0077CC" },
-    { name: "Design", count: 35, color: "#7c3aed" },
-    { name: "Business", count: 22, color: "#059669" },
-    { name: "Science", count: 18, color: "#d97706" },
-    { name: "Culture", count: 14, color: "#e11d48" },
-    { name: "Health", count: 11, color: "#0891b2" },
-];
 
-// const tags = [
-//     "React", "TypeScript", "Tailwind", "Node.js", "UX Design",
-//     "Productivity", "Startups", "AI", "Web Dev", "CSS",
-//     "Performance", "Accessibility", "Career", "Writing",
-// ];
 
-export default function BlogSidebar({tags}) {
+export default function BlogSidebar({tags, categoryMap}) {
     return (
         <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 space-y-6">
 
@@ -111,28 +98,23 @@ export default function BlogSidebar({tags}) {
                     </h3>
                 </div>
                 <ul className="p-4 space-y-2">
-                    {popularCategories.map((cat, i) => (
-                        <motion.li
-                            key={cat.name}
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.3, delay: 0.05 * i }}
-                        >
+                    {Array.from(categoryMap).map(([value, key]) => (
+                        <li key={value}>
                             <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-stone-50 transition-colors group">
                                 <div className="flex items-center gap-2.5">
                                     <span
                                         className="w-2 h-2 rounded-full flex-shrink-0"
-                                        style={{ backgroundColor: cat.color }}
+                                        style={{ backgroundColor: "#0077CC" }}
                                     />
                                     <span className="text-sm font-medium text-stone-700 group-hover:text-stone-900 transition-colors">
-                                        {cat.name}
+                                        {value}
                                     </span>
                                 </div>
                                 <span className="text-xs text-stone-400 font-medium bg-stone-100 px-2 py-0.5 rounded-md">
-                                    {cat.count}
+                                    {key}
                                 </span>
                             </button>
-                        </motion.li>
+                        </li>
                     ))}
                 </ul>
             </motion.div>
