@@ -14,6 +14,9 @@ import BlogDetails from './pages/BlogDetails'
 import BlogListing from './pages/BlogListing'
 import Category from './pages/Category'
 import BlogByCategory from './pages/BlogByCategory'
+import Latest from './pages/explore/Latest'
+import Trending from './pages/explore/Trending'
+import EditorPick from './pages/explore/EditorPick'
 function App() {
   const location = useLocation()
   const hideLayout = ["/sign-in", "/sign-up","my-blogs"].includes(location.pathname);
@@ -34,6 +37,9 @@ function App() {
       <Route path='/single' element={<BlogDetails />} />
       <Route path='/blog/:slug' element={<BlogDetails />} />
       <Route path='/explore' element={<BlogListing />} />
+      <Route path='/explore/latest' element={<Latest />} />
+      <Route path='/explore/trending' element={<Trending />} />
+      <Route path='/explore/editor-pick' element={<EditorPick />} />
       <Route path="/explore/category" element={<Category />} />
       <Route path="/explore/category/:category" element={<BlogByCategory />} />
     </Routes>

@@ -228,3 +228,17 @@ export const uploadImage = async (req, res) => {
         })
     }
 }
+
+
+export const incrementViews = async (req, res) => {
+    try {
+        await Blog.findByIdAndUpdate(
+            req.params.id,
+            { $inc : {views: 1}}
+        )
+        return res.status(200).json({ success: true})
+    } catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({ success: false, message: "Internal Server Error"})
+    }
+}

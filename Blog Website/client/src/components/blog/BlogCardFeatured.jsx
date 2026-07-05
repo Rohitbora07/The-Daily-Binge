@@ -15,7 +15,7 @@ export default function BlogCardFeatured({ blog }) {
                     style={{ aspectRatio: "16/10" }}
                 >
                     <img
-                        src={blog.cover}
+                        src={blog.coverImage.url}
                         alt={blog.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
@@ -41,7 +41,7 @@ export default function BlogCardFeatured({ blog }) {
 
                     <div className="flex items-center gap-3 mb-6">
                         <img
-                            src={blog.author.avatar}
+                            src={blog.author.profileImg}
                             alt={blog.author.name}
                             className="w-9 h-9 rounded-full object-cover ring-2 ring-stone-100"
                         />

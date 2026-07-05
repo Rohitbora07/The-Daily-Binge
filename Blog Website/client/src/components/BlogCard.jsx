@@ -1,13 +1,15 @@
 import { motion } from "motion/react";
 import { Bookmark, Clock3, Heart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 
 export function BlogCard({ blog, index }) {
+    const navigate = useNavigate()
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            onClick={()=> navigate(`/blog/${blog.slug}`)}
             transition={{ delay: index * 0.05, duration: 0.5, ease: "easeOut" }}
             className="group bg-white rounded-2xl overflow-hidden border border-stone-200 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full"
         >

@@ -6,27 +6,10 @@ import BlogComments from "../components/blog/BlogComments";
 import RelatedBlogs from "../components/blog/RelatedBlogs";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { GET_SINGLE_BLOG } from "../constants/route";
+import { GET_SINGLE_BLOG, VIEW_INC } from "../constants/route";
 import api from "../api/axios";
 import BlogContent from "../components/blog/BlogContent";
-// const blog = {
-//     category: "Technology",
-//     title: "Why TypeScript Is No Longer Optional for Serious Projects",
-//     subtitle:
-//         "A deep dive into how TypeScript's type system saves thousands of hours in debugging and makes large codebases manageable.",
-//     cover:
-//         "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1400&h=700&fit=crop",
-//     author: {
-//         name: "Sarah Chen",
-//         role: "Staff Writer",
-//         avatar:
-//             "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&h=160&fit=crop&crop=face",
-//     },
-//     publishedAt: "June 18, 2025",
-//     readTime: 9,
-//     views: 11430,
-//     tags: ["TypeScript", "JavaScript", "Web Dev", "Developer Experience", "Tooling"],
-// };
+
 
 export default function BlogDetails() {
 
@@ -41,12 +24,17 @@ export default function BlogDetails() {
                 console.log(typeof data.blog.content)
                 setBlog(data.blog)
                 setAuthor(data.blog.author)
+                // 
             } catch (error) {
                 console.log(error)
             }
         }
         getSingleBlog()
     }, [slug])
+
+    useEffect(()=> {
+        if( blog?._id ) api.post(VIEW_INC(blog._id))
+    },[blog?._id])
 
     if (!blog) {
         return <div>Loading...</div>;
@@ -85,9 +73,9 @@ export default function BlogDetails() {
                     </h1>
 
                     {/* Subtitle */}
-                    {/* <p className="text-stone-500 text-lg leading-relaxed mb-8 max-w-2xl mx-auto">
-                        {blog.subtitle}
-                    </p> */}
+                    <p className="text-stone-500 text-lg leading-relaxed mb-8 max-w-2xl mx-auto">
+                        {blog.excerpt}
+                    </p>
 
                     {/* Author + meta row */}
                     <div className="flex items-center justify-center gap-4 flex-wrap">
@@ -118,7 +106,7 @@ export default function BlogDetails() {
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <Eye size={13} className="text-stone-400" />
-                                {blog.views.toLocaleString() || "-"} views
+                                {blog.views || "-"} views
                             </span>
                         </div>
                     </div>
