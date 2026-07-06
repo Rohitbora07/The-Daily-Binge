@@ -242,3 +242,64 @@ export const incrementViews = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error"})
     }
 }
+
+export const toggleLike = async (req, res) => {
+    try {
+        const {blogId} = req.params
+        const userId = req.userId
+        const blog = await Blog.findById(blogId)
+
+        if(!blog){
+        return res.status(400).json({ success: false, message: "Blog not found"})
+        }
+
+        const alreadyLiked = blog.likedBy.some( id => id.equals(userId) )
+        if( alreadyLiked ){
+            blog.likedBy.pull(userId)
+            blog.likes--;
+        }else{
+            blog.likedBy.push(userId)
+            blog.likes++;
+        }
+        await blog.save()
+
+        return res.status(200).json({ success: true, message: alreadyLiked ? "Like removed successfully" : "Blog Liked successfully"})
+
+    } catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({ success: false, message: "Internal Server Error"})
+    }
+}
+
+
+export const getPublishedByTimeBlogs = async (req, res) => {
+    try{
+        const {range} = req.query
+
+        let filter = {
+            status: "published",
+            visibility: "public"
+        }
+        const now = Date.now()
+
+        if( range === "24h" ){
+            filter.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
+        }   
+
+        if( range === "week" ){
+            filter.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
+        }
+
+        if( range === "month" ){
+            filter.publishedAt = { $gte: new Date(now - 30 * 24 * 60 * 60 * 1000) }
+        }
+
+        const blogs = await Blog.find(filter).sort({createdAt: -1}).populate("author", "name email profileImg")
+
+        return res.status(200).json({ success: true, blogs })
+
+    }catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({ success: false, message: "Internal Server Error"})
+    }
+}

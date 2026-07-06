@@ -32,6 +32,7 @@ export default function BlogDetails() {
         getSingleBlog()
     }, [slug])
 
+    
     useEffect(()=> {
         if( blog?._id ) api.post(VIEW_INC(blog._id))
     },[blog?._id])
@@ -143,7 +144,7 @@ export default function BlogDetails() {
 
                         {/* Mobile share bar */}
                         <div className="flex lg:hidden items-center gap-3 mb-8 pb-6 border-b border-stone-100">
-                            <BlogShareBar />
+                            <BlogShareBar blog={blog} />
                         </div>
 
                         {/* Prose */}

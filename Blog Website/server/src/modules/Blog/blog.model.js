@@ -66,6 +66,10 @@ const blogSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    likedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
     commentsCount: {
         type: Number,
         default: 0
@@ -94,9 +98,9 @@ const blogSchema = new mongoose.Schema({
         type: [String],
         default: []
     }
-},{timestamps: true});
+}, { timestamps: true });
 
-blogSchema.index({author: 1});
+blogSchema.index({ author: 1 });
 blogSchema.index({ category: 1 });
 blogSchema.index({ tags: 1 });
 blogSchema.index({ createdAt: -1 });

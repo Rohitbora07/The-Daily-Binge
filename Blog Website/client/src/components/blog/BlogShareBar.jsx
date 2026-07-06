@@ -2,18 +2,26 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Heart, Bookmark, Link2, Check } from "lucide-react";
 import { FaTwitter, FaLinkedin, FaFacebook } from "react-icons/fa"
+import api from "../../api/axios";
+import { LIKE_BLOG } from "../../constants/route";
 
-export default function BlogShareBar() {
+export default function BlogShareBar({ blog }) {
     const [liked, setLiked] = useState(false);
     const [saved, setSaved] = useState(false);
     const [copied, setCopied] = useState(false);
     const [likes, setLikes] = useState(724);
     const [bookmarks, setBookmarks] = useState(215);
 
-    const handleLike = () => {
-        setLiked(!liked);
-        setLikes((n) => (liked ? n - 1 : n + 1));
-    };
+    const handleLike = async () => {
+            try {
+                const { data } = await api.post(LIKE_BLOG(blog?._id))
+                setLiked(true)
+                console.log(data)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+    
     const handleSave = () => {
         setSaved(!saved);
         setBookmarks((n) => (saved ? n - 1 : n + 1));
