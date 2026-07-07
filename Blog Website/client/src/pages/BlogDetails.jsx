@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import { Eye, Clock, Calendar } from "lucide-react";
 import BlogShareBar from "../components/blog/BlogShareBar";
 import BlogAuthorCard from "../components/blog/BlogAuthorCard";
-import BlogComments from "../components/blog/BlogComments";
+import BlogComments from "../components/comments/BlogComments";
 import RelatedBlogs from "../components/blog/RelatedBlogs";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -174,7 +174,7 @@ export default function BlogDetails() {
                         </div>
 
                         {/* Comments */}
-                        <BlogComments />
+                        <BlogComments blog={blog} />
 
                         {/* Related */}
                         <RelatedBlogs />

@@ -5,6 +5,7 @@ import FreshSidebar from "../../components/latest/FreshSidebar";
 import { BlogCard } from "../../components/BlogCard"
 import { GET_ALL_BLOGS } from "../../constants/route";
 import api from "../../api/axios";
+import BlogGrid from "../../components/BlogGrid";
 
 
 /* Simple helper to calculate stats based on currently selected flat list of blogs */
@@ -133,11 +134,7 @@ export default function Latest() {
 
                     {/* Flat Blog Layout Replacement */}
                     {displayedBlogs.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {filteredBlogs.map(blog => (
-                                <BlogCard blog={blog} />
-                            ))}
-                        </div>
+                        <BlogGrid blogs={displayedBlogs} sliceLimit={displayedBlogs.length} />
                     ) : (
                         <div className="text-center py-12 text-stone-400">No stories found matching the active criteria.</div>
                     )}

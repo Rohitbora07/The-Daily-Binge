@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Search, TrendingUp, Clock, Sparkles, ArrowRight, Globe, ChevronDown } from "lucide-react";
-import { BlogCard } from "../components/BlogCard";
+// import { BlogCard } from "../components/BlogCard";
 import BlogCardFeatured from "../components/blog/BlogCardFeatured";
 import BlogSidebar from "../components/blog/BlogSidebar";
 // import NewsletterSection from "../components/blog/NewsletterSection";
@@ -11,6 +11,7 @@ import api from "../api/axios";
 import SearchBar from "../components/SearchBar"
 // import { useNavigate } from "react-router-dom";
 import TitleBar from "../components/TitleBar";
+import BlogGrid from "../components/BlogGrid";
 
 
 
@@ -238,22 +239,11 @@ export default function BlogListing() {
                                     </p>
                                 </motion.div>
                             ) : (
-                                <motion.div
-                                    key={`${activeFeed}-${activeCategory}-${page}`}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="grid grid-cols-1 sm:grid-cols-2 gap-5"
-                                >
-                                    {seachedBlogs.map((blog, i) => (
-                                        <BlogCard key={blog._id} blog={blog} index={0.05 * i} />
-                                    ))}
-                                </motion.div>
+                                <BlogGrid blogs={seachedBlogs} sliceLimit={3} />
                             )}
                         </AnimatePresence>
 
-                        {!search && <TitleBar Icon={Globe} title="Trending Articles" destination={`/explore/trending`} />}
+                        {!search && <TitleBar Icon={TrendingUp} title="Trending Articles" destination={`/explore/trending`} />}
 
                         <AnimatePresence mode="wait">
                             {seachedBlogs.length === 0 ? (
@@ -277,22 +267,11 @@ export default function BlogListing() {
                                     </p>
                                 </motion.div>
                             ) : (
-                                <motion.div
-                                    key={`${activeFeed}-${activeCategory}-${page}`}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="grid grid-cols-1 sm:grid-cols-2 gap-5"
-                                >
-                                    {seachedBlogs.map((blog, i) => (
-                                        <BlogCard key={blog._id} blog={blog} index={0.05 * i} />
-                                    ))}
-                                </motion.div>
+                                <BlogGrid blogs={seachedBlogs} sliceLimit={3} />
                             )}
                         </AnimatePresence>
 
-                        {!search && <TitleBar Icon={Globe} title="Editor's Pick" destination={`/explore/editor-pick`} />}
+                        {!search && <TitleBar Icon={Sparkles} title="Editor's Pick" destination={`/explore/editor-pick`} />}
 
                         <AnimatePresence mode="wait">
                             {seachedBlogs.length === 0 ? (
@@ -316,18 +295,7 @@ export default function BlogListing() {
                                     </p>
                                 </motion.div>
                             ) : (
-                                <motion.div
-                                    key={`${activeFeed}-${activeCategory}-${page}`}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="grid grid-cols-1 sm:grid-cols-2 gap-5"
-                                >
-                                    {seachedBlogs.map((blog, i) => (
-                                        <BlogCard key={blog._id} blog={blog} index={0.05 * i} />
-                                    ))}
-                                </motion.div>
+                                <BlogGrid blogs={seachedBlogs} sliceLimit={3} />
                             )}
                         </AnimatePresence>
                     </div>

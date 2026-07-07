@@ -58,10 +58,7 @@ export const createBlog = async (req, res) => {
         return res.status(201).json({ success: true, message: "Blog created successfully", blog })
     } catch (err) {
         console.log("Error:", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        })
+        return res.status(500).json({success: false,message: "Internal Server Error"})
     }
 }
 

@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import api from "../api/axios";
 import { UPDATE_PROFILE_ROUTE } from "../constants/route"
 import { useLocation, useNavigate } from "react-router-dom";
-import { User, Globe, CheckCircle2, Bell, } from "lucide-react";
+import { User, Globe, CheckCircle2, Shield } from "lucide-react";
 import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa"
 import AvatarUpload from "../components/settings/AvatarUpload";
 import SettingsSection from "../components/settings/SettingsSection";
@@ -11,7 +11,7 @@ import DangerZone from "../components/settings/DangerZone";
 import userAuthStore from "../store/authStore";
 
 const Field = ({ label, hint, children }) => (
-    <div>
+    <div className="w-full">
         <div className="flex items-center justify-between mb-1.5">
             <label className="block text-sm font-medium text-stone-700">{label}</label>
             {hint && <span className="text-xs text-stone-400">{hint}</span>}
@@ -21,7 +21,7 @@ const Field = ({ label, hint, children }) => (
 );
 
 const Input = ({ icon: Icon, ...props }) => (
-    <div className="relative">
+    <div className="relative w-full">
         {Icon && (
             <Icon
                 size={15}
@@ -42,9 +42,6 @@ const Textarea = (props) => (
     />
 );
 
-
-
-
 export default function UpdateProfile() {
     const [activeNav, setActiveNav] = useState("profile");
     const BIO_LIMIT = 200;
@@ -52,7 +49,6 @@ export default function UpdateProfile() {
     const location = useLocation();
     const editable = location.pathname.includes("/profile/update");
     const navigate = useNavigate();
-    const [security, setSecurity] = useState(false);
 
     const user = userAuthStore((state) => state.user);
 
@@ -85,7 +81,6 @@ export default function UpdateProfile() {
 
     const charCount = userBio.length;
 
-
     const updateUserProfile = async () => {
         try {
             const formData = new FormData();
@@ -100,15 +95,12 @@ export default function UpdateProfile() {
             formData.append("backgroundImg", userBackgroundImg);
             formData.append("location", userLocation);
 
-            console.log(profileImg, "asdas")
-
-            const { data } = await api.put(UPDATE_PROFILE_ROUTE, formData)
-            console.log(data)
-
+            const { data } = await api.put(UPDATE_PROFILE_ROUTE, formData);
+            console.log(data);
         } catch (error) {
-            console.error("Error updating user profile:", error.response.data.message);
+            console.error("Error updating user profile:", error.response?.data?.message || error.message);
         }
-    }
+    };
 
     const SOCIAL_LINKS = [
         { label: "GitHub", icon: FaGithub, value: userGithub, onChange: setUserGithub, placeholder: `https://github.com/${userName || "username"}` },
@@ -118,10 +110,8 @@ export default function UpdateProfile() {
     ];
 
     const navItems = [
-        { key: "profile", label: "Profile", setAction: () => setSecurity(false) },
-        { key: "social", label: "My Blogs" },
-        { key: "notifications", label: "Notifications" },
-        { key: "security", label: "Security", setAction: () => setSecurity(true) },
+        { key: "profile", label: "Profile" },
+        { key: "security", label: "Security" },
     ];
 
     return (
@@ -131,64 +121,81 @@ export default function UpdateProfile() {
             transition={{ duration: 0.35 }}
             className="min-h-screen bg-stone-50 mt-20"
         >
-            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 py-8">
-                <div className="flex gap-8 xl:gap-12 items-start">
+            {/* Added justify-center to eliminate trailing whitespace on big monitors */}
+            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 py-8 flex justify-center">
+                
+                {/* Changed items-start to justify-center container level */}
+                <div className="flex w-full gap-8 xl:gap-12 justify-center items-start">
 
+                    {/* Sidebar Nav */}
                     <div className="hidden lg:block w-52 flex-shrink-0 sticky top-24">
                         <nav className="space-y-1">
-                            {navItems.map(({ key, label }) => (
-                                <button
-                                    key={key}
-                                    onClick={() => {
-                                        setActiveNav(key)
-                                        key.setAction
-                                    }}
-                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-left transition-all duration-200 ${activeNav === key
+                            <button
+                                onClick={() => setActiveNav("profile")}
+                                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-left transition-all duration-200 ${
+                                    activeNav === "profile"
                                         ? "bg-[#E0F0FF] text-[#0077CC]"
                                         : "text-stone-600 hover:bg-stone-100 hover:text-stone-800"
-                                        }`}
-                                >
-                                    {key === "profile" && <User size={15} />}
-                                    {key === "social" && <Globe size={15} />}
-                                    {key === "notifications" && <Bell size={15} />}
-                                    {key === "security" && <FaGithub size={15} />}
-                                    {label}
-                                </button>
-                            ))}
+                                }`}
+                            >
+                                <User size={15} />
+                                Profile
+                            </button>
+                            <button
+                                onClick={() => setActiveNav("security")}
+                                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-left transition-all duration-200 ${
+                                    activeNav === "security"
+                                        ? "bg-[#E0F0FF] text-[#0077CC]"
+                                        : "text-stone-600 hover:bg-stone-100 hover:text-stone-800"
+                                }`}
+                            >
+                                <Shield size={15} />
+                                Security
+                            </button>
                         </nav>
                     </div>
 
+                    {/* Main Content Area */}
+                    <div className="flex-1 w-full max-w-2xl space-y-5">
+                        
+                        {/* Mobile Navigation */}
+                        <div className="flex lg:hidden items-center gap-1 bg-white border border-stone-200 rounded-xl p-1 mb-6">
+                            {navItems.map(({ key, label }) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setActiveNav(key)}
+                                    className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-all ${
+                                        activeNav === key
+                                            ? "bg-[#0077CC] text-white"
+                                            : "text-stone-500 hover:text-stone-800"
+                                    }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
 
-                    {
-                        !security ?
-                            <div className="flex-1 min-w-0 max-w-2xl space-y-5">
-
-
-                                <div className="flex lg:hidden items-center gap-1 bg-white border border-stone-200 rounded-xl p-1 mb-6">
-                                    {navItems.map(({ key, label }) => (
-                                        <button
-                                            key={key}
-                                            onClick={() => setActiveNav(key)}
-                                            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-all ${activeNav === key
-                                                ? "bg-[#0077CC] text-white"
-                                                : "text-stone-500 hover:text-stone-800"
-                                                }`}
-                                        >
-                                            {label}
-                                        </button>
-                                    ))}
-                                </div>
-
+                        {/* Tabs Routing */}
+                        {activeNav === "profile" ? (
+                            <>
                                 <SettingsSection
                                     title="Profile information"
                                     description="This is how your public profile will appear to other readers and writers."
                                     delay={0.05}
                                 >
                                     <div className="space-y-6">
-                                        <div className="flex gap-20 items-center justify-center">
-                                            <AvatarUpload profile={profileImg} setProfile={setprofileImg} editable={editable} />
-                                            <AvatarUpload profile={userBackgroundImg} setProfile={setUserBackgroundImg} editable={editable} />
+                                        {/* Fixed Avatar Wrapper Layout */}
+                                        <div className="flex flex-col sm:flex-row gap-6 sm:gap-12 justify-center items-center py-2">
+                                            <div className="flex flex-col items-center text-center gap-1.5">
+                                                <AvatarUpload profile={profileImg} setProfile={setprofileImg} editable={editable} />
+                                                <span className="text-xs text-stone-400 font-medium">Profile Image</span>
+                                            </div>
+                                            <div className="flex flex-col items-center text-center gap-1.5">
+                                                <AvatarUpload profile={userBackgroundImg} setProfile={setUserBackgroundImg} editable={editable} />
+                                                <span className="text-xs text-stone-400 font-medium">Header Banner</span>
+                                            </div>
                                         </div>
+
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                             <Field label="Full name">
                                                 <Input
@@ -254,48 +261,29 @@ export default function UpdateProfile() {
                                     </div>
                                 </SettingsSection>
 
-                                {
-                                    editable ?
-                                        <div className="flex items-center justify-between pt-2 pb-8">
-                                            <p className="text-xs text-stone-400">
-                                                Changes are saved to your public profile immediately.
-                                            </p>
-                                            <motion.button
-                                                whileHover={{ scale: 1.03, y: -1 }}
-                                                whileTap={{ scale: 0.97 }}
-                                                onClick={updateUserProfile}
-                                                className="flex items-center gap-2 text-sm font-semibold text-white bg-[#0077CC] hover:bg-[#005FA3] px-6 py-2.5 rounded-xl transition-colors"
-                                            >
-                                                <CheckCircle2 size={14} />
-                                                Save changes
-                                            </motion.button>
-                                        </div>
-                                        :
-                                        <div className="flex items-center justify-between pt-2 pb-8">
-                                            <p className="text-xs text-stone-400">
-                                                Changes are saved to your public profile immediately.
-                                            </p>
-                                            <motion.button
-                                                whileHover={{ scale: 1.03, y: -1 }}
-                                                whileTap={{ scale: 0.97 }}
-                                                onClick={() => navigate("/profile/update")}
-                                                className="flex items-center gap-2 text-sm font-semibold text-white bg-[#0077CC] hover:bg-[#005FA3] px-6 py-2.5 rounded-xl transition-colors"
-                                            >
-                                                <CheckCircle2 size={14} />
-                                                Edit Profile
-                                            </motion.button>
-                                        </div>
-                                }
-
-                            </div>
-                            :
+                                {/* Combined Action Buttons cleanly */}
+                                <div className="flex items-center justify-between pt-2 pb-8">
+                                    <p className="text-xs text-stone-400">
+                                        Changes are saved to your public profile immediately.
+                                    </p>
+                                    <motion.button
+                                        whileHover={{ scale: 1.03, y: -1 }}
+                                        whileTap={{ scale: 0.97 }}
+                                        onClick={editable ? updateUserProfile : () => navigate("/profile/update")}
+                                        className="flex items-center gap-2 text-sm font-semibold text-white bg-[#0077CC] hover:bg-[#005FA3] px-6 py-2.5 rounded-xl transition-colors whitespace-nowrap"
+                                    >
+                                        <CheckCircle2 size={14} />
+                                        {editable ? "Save changes" : "Edit Profile"}
+                                    </motion.button>
+                                </div>
+                            </>
+                        ) : (
                             <DangerZone />
-                    }
-
+                        )}
+                    </div>
 
                 </div>
             </div>
-
         </motion.div>
     );
 }
