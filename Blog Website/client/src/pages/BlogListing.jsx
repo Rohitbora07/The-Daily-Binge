@@ -26,7 +26,7 @@ const sortOptions = ["Newest first", "Oldest first", "Most viewed", "Most liked"
 
 export default function BlogListing() {
     const [activeCategory, setActiveCategory] = useState("All");
-    const [activeFeed, setActiveFeed] = useState("latest");
+    // const [activeFeed, setActiveFeed] = useState("latest");
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const [blogs, setBlogs] = useState(null)
@@ -63,7 +63,6 @@ export default function BlogListing() {
     const handleCategory = (cat) => { setActiveCategory(cat); setPage(1); };
     const handleSearch = (val) => { setSearch(val); setPage(1); };
 
-    const categories = blogs && ["All", ...new Set(blogs.map(blog => blog.category))]
     const tags = blogs && [...new Set(blogs.map(blog => blog.tags).flat())].slice(0, 20);
     const categoryMap = new Map()
     if (blogs) {

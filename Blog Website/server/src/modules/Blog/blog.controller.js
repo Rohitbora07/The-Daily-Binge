@@ -2,6 +2,7 @@ import Blog from "./blog.model.js";
 import cloudinary from "../../config/cloudinary.js";
 import slugify from "slugify"
 import fs from "fs/promises"
+import { calculateTrendingScore } from "../../utils/calculateTrending.js"
 
 
 export const createBlog = async (req, res) => {
@@ -37,6 +38,8 @@ export const createBlog = async (req, res) => {
         if (existingBlog) slug = `${slug}-${Date.now()}`;
 
 
+
+
         const blog = await Blog.create({
             title,
             slug,
@@ -55,10 +58,15 @@ export const createBlog = async (req, res) => {
             }
         })
 
+        if (blog.status === "published") {
+            blog.trendingScore = calculateTrendingScore(blog)
+            await blog.save()
+        }
+
         return res.status(201).json({ success: true, message: "Blog created successfully", blog })
     } catch (err) {
         console.log("Error:", err);
-        return res.status(500).json({success: false,message: "Internal Server Error"})
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
     }
 }
 
@@ -193,7 +201,7 @@ export const getBlogsByCategory = async (req, res) => {
     }
     try {
         const blogs = await Blog.find({ category }).sort({ createdAt: -1 }).populate("author", "name email profileImg")
-        if(!blogs || blogs.length === 0) return res.status(404).json({ success: false, message: "No blogs found for this category" })
+        if (!blogs || blogs.length === 0) return res.status(404).json({ success: false, message: "No blogs found for this category" })
         return res.status(200).json({ success: true, blogs, message: `Blogs for category ${category} fetched successfully` })
     } catch (err) {
         console.log("Error:", err);
@@ -229,49 +237,55 @@ export const uploadImage = async (req, res) => {
 
 export const incrementViews = async (req, res) => {
     try {
-        await Blog.findByIdAndUpdate(
-            req.params.id,
-            { $inc : {views: 1}}
-        )
-        return res.status(200).json({ success: true})
+        const { blogId } = req.params
+        if (!blogId) return res.status(400).json({ message: "Blog ID is required" })
+        const blog = await Blog.findById(blogId)
+        if (!blog) {
+            return res.status(400).json({ success: false, message: "Blog not found" })
+        }
+        blog.views++;
+        blog.trendinScore = calculateTrendingScore(blog)
+        await blog.save()
+        return res.status(200).json({ success: true })
     } catch (err) {
         console.log("Error:", err);
-        return res.status(500).json({ success: false, message: "Internal Server Error"})
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
     }
 }
 
 export const toggleLike = async (req, res) => {
     try {
-        const {blogId} = req.params
+        const { blogId } = req.params
         const userId = req.userId
         const blog = await Blog.findById(blogId)
 
-        if(!blog){
-        return res.status(400).json({ success: false, message: "Blog not found"})
+        if (!blog) {
+            return res.status(400).json({ success: false, message: "Blog not found" })
         }
 
-        const alreadyLiked = blog.likedBy.some( id => id.equals(userId) )
-        if( alreadyLiked ){
+        const alreadyLiked = blog.likedBy.some(id => id.equals(userId))
+        if (alreadyLiked) {
             blog.likedBy.pull(userId)
             blog.likes--;
-        }else{
+        } else {
             blog.likedBy.push(userId)
             blog.likes++;
         }
+        blog.trendingScore = calculateTrendingScore(blog)
         await blog.save()
 
-        return res.status(200).json({ success: true, message: alreadyLiked ? "Like removed successfully" : "Blog Liked successfully"})
+        return res.status(200).json({ success: true, message: alreadyLiked ? "Like removed successfully" : "Blog Liked successfully" })
 
     } catch (err) {
         console.log("Error:", err);
-        return res.status(500).json({ success: false, message: "Internal Server Error"})
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
     }
 }
 
 
 export const getPublishedByTimeBlogs = async (req, res) => {
-    try{
-        const {range} = req.query
+    try {
+        const { range } = req.query
 
         let filter = {
             status: "published",
@@ -279,24 +293,57 @@ export const getPublishedByTimeBlogs = async (req, res) => {
         }
         const now = Date.now()
 
-        if( range === "24h" ){
+        if (range === "24h") {
             filter.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
-        }   
+        }
 
-        if( range === "week" ){
+        if (range === "week") {
             filter.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
         }
 
-        if( range === "month" ){
+        if (range === "month") {
             filter.publishedAt = { $gte: new Date(now - 30 * 24 * 60 * 60 * 1000) }
         }
 
-        const blogs = await Blog.find(filter).sort({createdAt: -1}).populate("author", "name email profileImg")
+        const blogs = await Blog.find(filter).sort({ createdAt: -1 }).populate("author", "name email profileImg")
 
         return res.status(200).json({ success: true, blogs })
 
-    }catch (err) {
+    } catch (err) {
         console.log("Error:", err);
-        return res.status(500).json({ success: false, message: "Internal Server Error"})
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
+    }
+}
+
+export const getTrendingBlogs = async (req, res) => {
+    try {
+        const { range } = req.query
+
+        let filter = {
+            status: "published",
+            visibility: "public",
+            trendingScore: { $gt: 0 }
+        }
+        const now = Date.now()
+        const cutoff = new Date(now - 24 * 60 * 60 * 1000);
+
+
+        if (range === "24h") {
+            filter.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
+        }
+        if (range === "week") {
+            filter.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
+        }
+        if (range === "month") {
+            filter.publishedAt = { $gte: new Date(now - 30 * 24 * 60 * 60 * 1000) }
+        }
+        const blogs = await Blog.find(filter).sort({ trendingScore: -1 }).populate("author", "name email profileImg")
+        return res.status(200).json({ success: true, blogs })
+    } catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        })
     }
 }

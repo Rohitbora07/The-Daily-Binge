@@ -1,5 +1,6 @@
 import Comments from "./comment.model.js"
 import Blog from "../Blog/blog.model.js"
+import { calculateTrendingScore } from "../../utils/calculateTrending.js"
 
 export const getBlogAllComments = async (req, res) => {
     try {
@@ -75,9 +76,10 @@ export const createComment = async (req, res) => {
             parentComment
         })
 
-        await Blog.findByIdAndUpdate(blogId,
-            { $inc: { commentsCount: 1 } }
-        )
+        blog.commentsCount++;
+        blog.trendingScore = calculateTrendingScore(blog)
+
+        await blog.save()
 
         const populatedComment = await Comments.findById(comment._id).populate("user", "name profileImg")
 

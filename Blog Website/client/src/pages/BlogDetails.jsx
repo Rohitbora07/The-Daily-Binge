@@ -21,7 +21,7 @@ export default function BlogDetails() {
         const getSingleBlog = async () => {
             try {
                 const { data } = await api.get(GET_SINGLE_BLOG(slug))
-                console.log(typeof data.blog.content)
+                console.log(data.blog)
                 setBlog(data.blog)
                 setAuthor(data.blog.author)
                 // 

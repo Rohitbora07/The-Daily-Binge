@@ -1,4 +1,4 @@
-import { createBlog, getUserBlogs, getSingleBlog, getAllBlogs, uploadImage, getBlogsByCategory, incrementViews, toggleLike, getPublishedByTimeBlogs } from "./blog.controller.js"
+import { createBlog, getUserBlogs, getSingleBlog, getAllBlogs, uploadImage, getBlogsByCategory, incrementViews, toggleLike, getPublishedByTimeBlogs, getTrendingBlogs } from "./blog.controller.js"
 import upload from "../../middlewares/upload.js"
 import { userAuth } from "../../middlewares/user.auth.js"
 import express from "express"
@@ -7,10 +7,11 @@ const blogRouter = express.Router()
 blogRouter.get("/all", getAllBlogs)
 blogRouter.post("/create", userAuth, upload.single("coverImage"), createBlog)
 blogRouter.get("/category/:category", userAuth, getBlogsByCategory)
-blogRouter.get("/:slug", getSingleBlog)
+blogRouter.get("/single/:slug", getSingleBlog)
 blogRouter.post("/upload-image", userAuth, upload.single("image"), uploadImage)
-blogRouter.post("/:id/view", incrementViews)
+blogRouter.post("/:blogId/view", incrementViews)
 blogRouter.post("/:blogId/like", userAuth, toggleLike)
 blogRouter.get("/published/all-blogs", getPublishedByTimeBlogs )
+blogRouter.get("/trending",getTrendingBlogs)
 
 export default blogRouter

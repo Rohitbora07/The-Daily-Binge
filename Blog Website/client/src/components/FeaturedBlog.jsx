@@ -4,7 +4,7 @@ import { Star, Clock3, Calendar, Eye, Heart, ArrowRight } from "lucide-react";
 
 
 
-export default function FeaturedBlog({blog}) {
+export default function FeaturedBlog({blog, title}) {
     // const blog = FEATURED_BLOG;
 
     return (
@@ -14,7 +14,7 @@ export default function FeaturedBlog({blog}) {
                 <div className="w-7 h-7 rounded-lg border border-stone-300 flex items-center justify-center bg-stone-50/50">
                     <Star size={13} className="text-[#0077CC]" />
                 </div>
-                <h2 className="text-xl font-serif font-medium tracking-tight text-stone-900">Featured Story</h2>
+                <h2 className="text-xl font-serif font-medium tracking-tight text-stone-900">{title}</h2>
             </div>
 
 

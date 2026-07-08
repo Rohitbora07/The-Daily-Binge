@@ -2,13 +2,7 @@ import { Send, FileText, MessageSquare, Globe, Lock } from "lucide-react";
 import TagInput from "./TagInput";
 import Select from "./OptionSelect";
 
-const categories = [
-    "Technology", "Design", "Business", "Science", "Culture",
-    "Health", "Politics", "Travel", "Finance", "Education",
-    "Food", "Sports", "Entertainment", "Lifestyle", "Environment",
-    "Art", "History", "Philosophy", "Psychology", "Sociology",
-    "Law", "Religion", "Music", "Film", "Literature",
-];
+const categories = ["AI", "Animation", "Anime", "Art", "Astronomy", "Adventure", "Books", "Business", "Basketball", "Baseball", "Boxing", "Beauty", "Biography", "Comics", "Cartoons", "Cinema", "Celebrity", "Cricket", "Cars", "Culture", "Cooking", "Design", "Drama", "Documentaries", "DIY", "Digital Culture", "Data Science", "Entertainment", "Esports", "Education", "Environment", "Economics", "Exploration", "Engineering", "Fashion", "Food", "Fitness", "Football", "Formula 1", "Finance", "Fantasy", "Gaming", "Gadgets", "Geography", "Government", "Green Living", "Graphic Design", "Gardening", "Health", "History", "Hollywood", "Horror", "Home & Living", "Hiking", "Humor", "Internet", "Innovation", "Influencers", "India", "Investment", "Interviews", "Indie", "Journalism", "Japan", "Jobs", "Justice", "Jazz", "K-Pop", "Korean Culture", "Knowledge", "Kickboxing", "Kitchen", "Lifestyle", "Literature", "Linux", "Leadership", "Law", "Luxury", "Local News", "Movies", "Music", "Manga", "Marvel", "Memes", "Mobile", "Mythology", "Nature", "News", "Netflix", "Nutrition", "Nintendo", "Novels", "Neuroscience", "OTT", "Olympics", "Open Source", "Ocean", "Outdoors", "Opinion", "Pop Culture", "Programming", "Photography", "Psychology", "Politics", "Podcasts", "Physics", "Philosophy", "Quantum Computing", "Quantum Physics", "Quizzes", "Quotes", "Q&A", "Quick Reads", "Reviews", "Robotics", "Recipes", "Racing", "Reality TV", "Renewable Energy", "Religion", "Sports", "Science", "Space", "Smartphones", "Startups", "Streaming", "Software", "Superheroes", "Technology", "TV Shows", "Travel", "Tennis", "Tutorials", "True Crime", "Tourism", "UFC", "Universities", "Urban Culture", "Universe", "Updates", "User Stories", "Video Games", "Virtual Reality", "Visual Arts", "Vehicles", "Viral Trends", "Volleyball", "Vegan", "Web Series", "WWE", "Wildlife", "World News", "Wearables", "Wellness", "Web Development", "Xbox", "X-Men", "X-Factor", "YouTube", "Yoga", "Youth Culture", "Young Adult", "Zoology", "Zoos","Zero Waste", "Zodiac"]
 
 export default function PublishSidebar({ onPublish, setCategory, category, setVisibility, visibility, setAllowComments, allowComments, tags, setTags }) {
     
