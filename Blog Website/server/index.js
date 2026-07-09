@@ -6,6 +6,7 @@ import blogRouter from './src/modules/Blog/blog.route.js';
 import connectDB from './src/config/mongoDB.js';
 import 'dotenv/config';
 import commentRouter from './src/modules/comments/comment.route.js';
+import bookmarkRouter from './src/modules/bookmarks/bookmark.route.js';
 
 
 connectDB()
@@ -23,6 +24,7 @@ app.use(cookieParser());
 app.use("/api/user", userRouter)
 app.use("/api/blog", blogRouter)
 app.use("/api/comments", commentRouter)
+app.use("/api/bookmark", bookmarkRouter)
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

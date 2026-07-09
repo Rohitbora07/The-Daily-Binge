@@ -3,33 +3,54 @@ import { motion, AnimatePresence } from "motion/react";
 import { Heart, Bookmark, Link2, Check } from "lucide-react";
 import { FaTwitter, FaLinkedin, FaFacebook } from "react-icons/fa"
 import api from "../../api/axios";
-import { LIKE_BLOG } from "../../constants/route";
+import { BLOG_BOOKMARK, LIKE_BLOG, CHECK_USER_BLOG_BOOKMARK, CREATE_BOOKMARK, DELETE_BOOKMARK } from "../../constants/route";
+import { useEffect } from "react";
 
-export default function BlogShareBar({ blog }) {
-    const [liked, setLiked] = useState(false);
-    const [saved, setSaved] = useState(false);
-    const [copied, setCopied] = useState(false);
-    const [likes, setLikes] = useState(724);
-    const [bookmarks, setBookmarks] = useState(215);
+export default function BlogShareBar({ blog, liked, setLiked }) {
+    const [likes, setLikes] = useState(blog.likes);
+    const [bookmarks, setBookmarks] = useState(blog.bookmarks);
+    const [bookmarked, setBookmarked] = useState(false)
 
     const handleLike = async () => {
-            try {
-                const { data } = await api.post(LIKE_BLOG(blog?._id))
-                setLiked(true)
-                console.log(data)
-            } catch (error) {
-                console.log(error)
-            }
+        try {
+            console.log(blog)
+            console.log(blog?._id)
+            const { data } = await api.post(LIKE_BLOG(blog?._id))
+            setLiked(data.isLiked)
+            setLikes(data.likes)
+            console.log(data)
+        } catch (error) {
+            console.log(error.response.data.message)
         }
-    
-    const handleSave = () => {
-        setSaved(!saved);
-        setBookmarks((n) => (saved ? n - 1 : n + 1));
-    };
-    const handleCopy = () => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+    }
+
+    useEffect(() => {
+        const getBookmarks = async () => {
+            const { data } = await api.get(BLOG_BOOKMARK(blog?._id))
+            const { data: check } = await api.get(CHECK_USER_BLOG_BOOKMARK(blog?._id))
+            setBookmarked(check.isBookmarked)
+            console.log(check.isBookmarked)
+            console.log(data)
+        }
+        getBookmarks()
+    }, [blog?._id])
+
+    const handleBookmark = async () => {
+        try {
+            const { data } = await api.post(CREATE_BOOKMARK(blog?._id))
+            console.log(data)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    const handleRemoveBookmark = async () => {
+    try {
+        const {data} = await api.delete(DELETE_BOOKMARK(blog?._id))
+        console.log(data)
+    } catch (error) {
+        console.log(error)
+    }
+    }
 
     return (
         <motion.div
@@ -45,8 +66,8 @@ export default function BlogShareBar({ blog }) {
                     whileTap={{ scale: 0.9 }}
                     onClick={handleLike}
                     className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all duration-200 ${liked
-                            ? "bg-red-50 border-red-200 text-red-500"
-                            : "bg-white border-stone-200 text-stone-400 hover:border-red-200 hover:text-red-400"
+                        ? "bg-red-50 border-red-200 text-red-500"
+                        : "bg-white border-stone-200 text-stone-400 hover:border-red-200 hover:text-red-400"
                         }`}
                 >
                     <Heart size={17} fill={liked ? "currentColor" : "none"} />
@@ -59,13 +80,13 @@ export default function BlogShareBar({ blog }) {
                 <motion.button
                     whileHover={{ scale: 1.12 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={handleSave}
-                    className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all duration-200 ${saved
-                            ? "bg-[#E0F0FF] border-[#C8D8E8] text-[#0077CC]"
-                            : "bg-white border-stone-200 text-stone-400 hover:border-[#C8D8E8] hover:text-[#0077CC]"
+                    onClick={bookmarked ? handleRemoveBookmark : handleBookmark}
+                    className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all duration-200 ${bookmarked
+                        ? "bg-[#E0F0FF] border-[#C8D8E8] text-[#0077CC]"
+                        : "bg-white border-stone-200 text-stone-400 hover:border-[#C8D8E8] hover:text-[#0077CC]"
                         }`}
                 >
-                    <Bookmark size={17} fill={saved ? "currentColor" : "none"} />
+                    <Bookmark size={17} fill={bookmarked ? "currentColor" : "none"} />
                 </motion.button>
                 <span className="text-[10px] font-medium text-stone-400">{bookmarks}</span>
             </div>
@@ -101,40 +122,7 @@ export default function BlogShareBar({ blog }) {
 
             <div className="w-full h-px bg-stone-100 hidden lg:block" />
 
-            {/* Copy link */}
-            <motion.button
-                whileHover={{ scale: 1.12 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={handleCopy}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all duration-200 ${copied
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-500"
-                        : "bg-white border-stone-200 text-stone-400 hover:border-stone-300 hover:text-stone-700"
-                    }`}
-            >
-                <AnimatePresence mode="wait">
-                    {copied ? (
-                        <motion.span
-                            key="check"
-                            initial={{ scale: 0.6, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.6, opacity: 0 }}
-                            transition={{ duration: 0.15 }}
-                        >
-                            <Check size={15} />
-                        </motion.span>
-                    ) : (
-                        <motion.span
-                            key="link"
-                            initial={{ scale: 0.6, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.6, opacity: 0 }}
-                            transition={{ duration: 0.15 }}
-                        >
-                            <Link2 size={15} />
-                        </motion.span>
-                    )}
-                </AnimatePresence>
-            </motion.button>
+
         </motion.div>
     );
 }

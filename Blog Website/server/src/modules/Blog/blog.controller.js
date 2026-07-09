@@ -111,7 +111,8 @@ export const getSingleBlog = async (req, res) => {
         if (!blog) {
             return res.status(404).json({ success: false, message: "Blog not found" })
         }
-        return res.status(200).json({ success: true, blog: blog })
+        const isLiked = blog.likedBy.some(id => id.equals(req.userId))
+        return res.status(200).json({ success: true, blog: blog, isLiked })
     } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({
@@ -257,24 +258,30 @@ export const toggleLike = async (req, res) => {
     try {
         const { blogId } = req.params
         const userId = req.userId
+        if( !blogId || !userId) {
+            return res.status(400).json({ success: false, message: "Missing required details" })
+        }
         const blog = await Blog.findById(blogId)
 
         if (!blog) {
             return res.status(400).json({ success: false, message: "Blog not found" })
         }
 
+        let isLiked;
         const alreadyLiked = blog.likedBy.some(id => id.equals(userId))
         if (alreadyLiked) {
             blog.likedBy.pull(userId)
             blog.likes--;
+            isLiked = false
         } else {
             blog.likedBy.push(userId)
             blog.likes++;
+            isLiked = true
         }
         blog.trendingScore = calculateTrendingScore(blog)
         await blog.save()
 
-        return res.status(200).json({ success: true, message: alreadyLiked ? "Like removed successfully" : "Blog Liked successfully" })
+        return res.status(200).json({ success: true, message: alreadyLiked ? "Like removed successfully" : "Blog Liked successfully", likes: blog.likes, isLiked})
 
     } catch (err) {
         console.log("Error:", err);
@@ -297,12 +304,12 @@ export const getPublishedByTimeBlogs = async (req, res) => {
             filter.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
         }
 
-        if (range === "week") {
-            filter.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
+        if (range === "yesterday") {
+            filter.publishedAt = { $gte: new Date(now - 2 * 24 * 60 * 60 * 1000) }
         }
 
-        if (range === "month") {
-            filter.publishedAt = { $gte: new Date(now - 30 * 24 * 60 * 60 * 1000) }
+        if (range === "week") {
+            filter.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
         }
 
         const blogs = await Blog.find(filter).sort({ createdAt: -1 }).populate("author", "name email profileImg")

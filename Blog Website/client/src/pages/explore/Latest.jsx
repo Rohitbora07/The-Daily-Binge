@@ -8,7 +8,6 @@ import api from "../../api/axios";
 import BlogGrid from "../../components/BlogGrid";
 
 
-/* Simple helper to calculate stats based on currently selected flat list of blogs */
 function getStats(blogs) {
     const total = blogs.length;
     const authors = [...new Set(blogs.map(b => b.author.name))].length;
@@ -44,12 +43,14 @@ export default function Latest() {
     useEffect(() => {
         const getAll = async () => {
             try {
-                const { data } = await api.get(`${GET_ALL_BLOGS}?range=24hr`)
-                console.log("data", data)
+                const { data } = await api.get(`${GET_ALL_BLOGS}?range=24h`)
+                console.log("Today's data", data)
                 setLast24hrBlogs(data.blogs || [])
-                const { data: weekData } = await api.get(`${GET_ALL_BLOGS}?range=week`)
+                const { data: weekData } = await api.get(`${GET_ALL_BLOGS}?range=yesterday`)
+                console.log("Yesterday's data", weekData)
                 setLastWeekBlogs(weekData.blogs || [])
-                const { data: monthData } = await api.get(`${GET_ALL_BLOGS}?range=month`)
+                const { data: monthData } = await api.get(`${GET_ALL_BLOGS}?range=week`)
+                console.log("This week's data", monthData)
                 setLastMonthBlogs(monthData.blogs || [])
             } catch (error) {
                 console.log(error)
@@ -58,7 +59,6 @@ export default function Latest() {
         getAll()
     }, [])
 
-    // 1. Simple Flat Filter Logic
     const filteredBlogs = last24hrBlogs && lastWeekBlogs && lastMonthBlogs ? ( period === "Today" ? last24hrBlogs : period === "This Week" ? lastWeekBlogs : lastMonthBlogs) : []
 
     const displayedBlogs = filteredBlogs.slice(0, visible);

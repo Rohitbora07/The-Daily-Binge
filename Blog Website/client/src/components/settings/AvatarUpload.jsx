@@ -1,16 +1,15 @@
 import { useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Camera, Trash2 } from "lucide-react";
-import { assets } from "../../../public/assets/assets";
+// import { assets } from "../../../public/assets/assets";
 
 export default function AvatarUpload({ profile, setProfile, editable }) {
     const inputRef = useRef(null);
 
     const src = profile
-        ? profile instanceof File
+        && profile instanceof File
             ? URL.createObjectURL(profile)
             : profile
-        : assets.upload_area;
 
     const handleFileChange = (e) => {
         const file = e.target.files?.[0];

@@ -18,3 +18,9 @@ export const USER_BLOGS = (userId) => `/user/${userId}/blogs`
 
 export const CREATE_COMMENT = (blogId) => `/comments/post/${blogId}`
 export const GET_BLOG_COMMENTS = (blogId) => `/comments/blog/${blogId}`
+
+export const CREATE_BOOKMARK = (blogId) => `/bookmark/add/${blogId}`
+export const DELETE_BOOKMARK = (blogId) => `/bookmark/delete/${blogId}`
+
+export const BLOG_BOOKMARK = (blogId) => `/bookmark/blog/${blogId}`
+export const CHECK_USER_BLOG_BOOKMARK = (blogId) => `/bookmark/user/${blogId}`

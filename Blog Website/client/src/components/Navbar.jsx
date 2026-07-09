@@ -13,7 +13,7 @@ function Navbar({ onSearchOpen, isMobileMenuOpen, setIsMobileMenuOpen }) {
     const [profileMenuOpen, setProfileMenuOpen] = useState(false)
     const user = userAuthStore((state) => state.user);
     const setUser = userAuthStore((state) => state.setUser)
-    
+
 
     useEffect(() =>{
         const currentUser = async () => {
@@ -30,15 +30,15 @@ function Navbar({ onSearchOpen, isMobileMenuOpen, setIsMobileMenuOpen }) {
     },[setUser])
 
 
-    return (
+return (
         <motion.nav
             initial={{ y: -80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed top-4 left-0 right-0 z-50 "
+            className="fixed top-4 left-0 right-0 z-50 select-none"
         >
             <div className="mx-auto max-w-[1500px] px-6 lg:px-8 ">
-                <div className="flex items-center justify-between rounded-3xl border border-[#C8D8E8]  px-7 py-4 shadow-[0_12px_40px_rgba(0,0,0,0.08)] bg-[#FFFFFF]">
+                <div className="flex items-center justify-between rounded-3xl border border-[#C8D8E8] px-7 py-4 shadow-[0_12px_40px_rgba(0,0,0,0.08)] bg-[#FFFFFF]">
 
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0077CC] text-white">
@@ -52,11 +52,11 @@ function Navbar({ onSearchOpen, isMobileMenuOpen, setIsMobileMenuOpen }) {
 
                     <div className="hidden md:flex items-center gap-2">
                         {NAV_LINKS.map((link, i) => (
-                            <motion.a
+                            <motion.div
                                 key={link}
-                                href="#"
                                 whileHover={{ scale: 1.05 }}
-                                className={`relative rounded-2xl px-5 py-2 text-sm font-medium transition-colors ${i === 0
+                                onClick={() => navigate(`/${link}`)}
+                                className={`relative cursor-pointer rounded-2xl px-5 py-2 text-sm font-medium transition-colors ${i === 0
                                     ? "text-stone-900"
                                     : "text-stone-500 hover:text-stone-900"
                                     }`}
@@ -69,7 +69,7 @@ function Navbar({ onSearchOpen, isMobileMenuOpen, setIsMobileMenuOpen }) {
                                         className="absolute inset-0 -z-10 rounded-2xl bg-stone-100"
                                     />
                                 )}
-                            </motion.a>
+                            </motion.div>
                         ))}
                     </div>
 
@@ -89,58 +89,73 @@ function Navbar({ onSearchOpen, isMobileMenuOpen, setIsMobileMenuOpen }) {
                             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
                         </button>
 
-                        {
-                            user ?
-                                <div
-                                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                                    className="rounded-full w-10 h-10 bg-[#0D1B2A] flex items-center justify-center text-white transition-colors hover:hover:bg-[#0077CC]">
-                                    {user.name.charAt(0).toUpperCase()}
-                                </div>
-                                :
-                                <button
-                                    onClick={() => navigate("/sign-in")}
-                                    className="rounded-2xl  bg-[#0D1B2A] px-5 py-2 text-sm font-semibold text-white transition-colors hover:hover:bg-[#0077CC]">
-                                    {"Sign In"}
-                                </button>
-                        }
+                        <div className="relative">
+                            {
+                                user ?
+                                    <button
+                                        onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                                        className="rounded-full w-10 h-10 bg-[#0D1B2A] flex items-center justify-center text-white overflow-hidden transition-colors hover:bg-[#0077CC] outline-none"
+                                    >
+                                        {user.profileImg ? (
+                                            <img className="w-full h-full object-cover" src={user.profileImg} alt="Profile" />
+                                        ) : (
+                                            <span className="text-sm font-bold">{user.name?.charAt(0).toUpperCase() || "?"}</span>
+                                        )}
+                                    </button>
+                                    :
+                                    <button
+                                        onClick={() => navigate("/sign-in")}
+                                        className="rounded-2xl bg-[#0D1B2A] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0077CC]"
+                                    >
+                                        {"Sign In"}
+                                    </button>
+                            }
 
-                        {
-                            profileMenuOpen && setUser &&
-                            <div className="absolute top-16 right-6 w-48 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden z-50">
-                                <button
-                                    onClick={() => {
-                                        setProfileMenuOpen(false);
-                                        navigate("/profile");
-                                    }}
-                                    className="block w-full px-4 py-3 text-left text-stone-700 transition-colors hover:bg-stone-100"
-                                >
-                                    Profile
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setProfileMenuOpen(false);
-                                        navigate("/settings");
-                                    }}
-                                    className="block w-full px-4 py-3 text-left text-stone-700 transition-colors hover:bg-stone-100"
-                                >
-                                    Settings
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setProfileMenuOpen(false);
-                                        navigate("/sign-out");
-                                    }}
-                                    className="block w-full px-4 py-3 text-left text-stone-700 transition-colors hover:bg-stone-100"
-                                >
-                                    Sign Out
-                                </button>
-                            </div>
-                        }
-
-
+                            <AnimatePresence>
+                                {
+                                    profileMenuOpen && setUser && user &&
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="absolute right-0 mt-3 w-48 bg-white border border-stone-200 rounded-2xl shadow-xl overflow-hidden z-50 py-1"
+                                    >
+                                        <button
+                                            onClick={() => {
+                                                setProfileMenuOpen(false);
+                                                navigate(`/profile/${user._id}`);
+                                            }}
+                                            className="block w-full px-4 py-2.5 text-left text-sm text-stone-700 transition-colors hover:bg-stone-100"
+                                        >
+                                            Profile
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setProfileMenuOpen(false);
+                                                navigate("/profile/update");
+                                            }}
+                                            className="block w-full px-4 py-2.5 text-left text-sm text-stone-700 transition-colors hover:bg-stone-100"
+                                        >
+                                            Settings
+                                        </button>
+                                        <hr className="border-stone-100 my-1" />
+                                        <button
+                                            onClick={() => {
+                                                setProfileMenuOpen(false);
+                                                navigate("/sign-out");
+                                            }}
+                                            className="block w-full px-4 py-2.5 text-left text-sm text-red-600 font-medium transition-colors hover:bg-red-50"
+                                        >
+                                            Sign Out
+                                        </button>
+                                    </motion.div>
+                                }
+                            </AnimatePresence>
+                        </div>
 
                         <button
-                            className="rounded-2xl p-2.5 text-stone-500 transition-colors hover:hover:bg-[#EBF1F8] hover:text-stone-900 md:hidden"
+                            className="rounded-2xl p-2.5 text-stone-500 transition-colors hover:bg-[#EBF1F8] hover:text-stone-900 md:hidden"
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         >
                             {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
@@ -157,22 +172,33 @@ function Navbar({ onSearchOpen, isMobileMenuOpen, setIsMobileMenuOpen }) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2 }}
-                        className="mx-6 mt-3 rounded-3xl border border-stone-200 bg-white p-4 shadow-xl md:hidden"
+                        className="mx-6 mt-3 rounded-3xl border border-stone-200 bg-white p-4 shadow-xl md:hidden flex flex-col gap-1"
                     >
                         {NAV_LINKS.map((link) => (
-                            <a
+                            <button
                                 key={link}
-                                href="#"
-                                className="flex items-center justify-between rounded-2xl px-4 py-3 text-stone-700 transition-colors hover:bg-stone-100"
+                                onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    navigate(`/${link}`);
+                                }}
+                                className="flex items-center justify-between rounded-2xl px-4 py-3 text-stone-700 transition-colors hover:bg-stone-100 text-left font-medium text-sm"
                             >
                                 {link}
                                 <ChevronRight size={16} className="text-stone-400" />
-                            </a>
+                            </button>
                         ))}
 
-                        <button className="mt-4 w-full rounded-2xl bg-[#0077CC] py-3 text-sm font-semibold text-white transition-colors hover:bg-stone-800">
-                            Sign In
-                        </button>
+                        {!user && (
+                            <button 
+                                onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    navigate("/sign-in");
+                                }}
+                                className="mt-2 w-full rounded-2xl bg-[#0077CC] py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                            >
+                                Sign In
+                            </button>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

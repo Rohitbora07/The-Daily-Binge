@@ -16,12 +16,14 @@ export default function BlogDetails() {
     const { slug } = useParams()
     const [blog, setBlog] = useState(null)
     const [author, setAuthor] = useState(null)
+    const [liked, setLiked] = useState(false)
 
     useEffect(() => {
         const getSingleBlog = async () => {
             try {
                 const { data } = await api.get(GET_SINGLE_BLOG(slug))
-                console.log(data.blog)
+                console.log(data)
+                setLiked(data.isLiked)
                 setBlog(data.blog)
                 setAuthor(data.blog.author)
                 // 
@@ -136,7 +138,7 @@ export default function BlogDetails() {
 
                     {/* Share bar — left sticky column */}
                     <div className="hidden lg:flex flex-col items-center sticky top-20 flex-shrink-0 pt-2">
-                        <BlogShareBar />
+                        <BlogShareBar blog={blog} liked={liked} setLiked={setLiked} />
                     </div>
 
                     {/* div body */}
@@ -144,7 +146,7 @@ export default function BlogDetails() {
 
                         {/* Mobile share bar */}
                         <div className="flex lg:hidden items-center gap-3 mb-8 pb-6 border-b border-stone-100">
-                            <BlogShareBar blog={blog} />
+                            <BlogShareBar blog={blog} liked={liked} setLiked={setLiked} />
                         </div>
 
                         {/* Prose */}

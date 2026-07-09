@@ -1,14 +1,14 @@
 import { useState, useRef } from "react";
 import { ImagePlus, X, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { assets } from "../../../public/assets/assets"
+// import { assets } from "../../../public/assets/assets"
 
 export default function CoverImageUpload({preview, setPreview}) {
     // const [preview, setPreview] = useState(null);
     const [dragging, setDragging] = useState(false);
     const inputRef = useRef(null);
 
-    const src = !preview ? assets.upload_area : preview instanceof File ? URL.createObjectURL(preview) : preview
+    const src = !preview && preview instanceof File ? URL.createObjectURL(preview) : preview
 
     // let url = null;
     // const handleFile = (file) => {
