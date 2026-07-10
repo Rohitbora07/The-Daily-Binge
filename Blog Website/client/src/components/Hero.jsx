@@ -3,49 +3,52 @@ import { motion } from "motion/react";
 import { Flame, ArrowRight, PenSquare, BookOpen, Clock3, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const FLOAT_CARDS = [
+
+
+export default function Hero({blogs}) {
+
+    const FLOAT_CARDS = [
     {
-        title: "Building AI-First Products",
-        category: "AI",
+        title: blogs[0].title.slice(0,22),
+        category: blogs[0].category,
         color: "#C98A5B",
         rotate: -6,
         x: 30,
         y: 20,
         delay: 0,
-        author: "Sarah Jenkins",
+        author: blogs[0].author.name,
         avatarColor: "bg-stone-200 text-stone-700"
     },
     {
-        title: "React 19 Deep Dive",
-        category: "React",
+        title: blogs[1].title.slice(0,22),
+        category: blogs[1].category,
         color: "#C98A5B",
         rotate: 4,
         x: 60,
         y: 120,
         delay: 0.3,
-        author: "David Kroll",
+        author: blogs[1].author.name,
         avatarColor: "bg-stone-300 text-stone-800"
     },
     {
-        title: "Design Systems at Scale",
-        category: "Design",
+        title: blogs[2].title.slice(0,22),
+        category: blogs[2].category,
         color: "#C98A5B",
         rotate: -3,
         x: 10,
         y: 200,
         delay: 0.6,
-        author: "Elena Rostova",
+        author: blogs[2].author.name,
         avatarColor: "bg-stone-200 text-stone-700"
     },
 ];
-
-export default function Hero() {
+    
     const navigate = useNavigate()
     return (
         <section className="relative min-h-screen flex items-center overflow-hidden pt-24 pb-16 bg-[#E8F0F8]">
-            {/* BG Blobs & Grid Pattern */}
+            
             <div className="absolute inset-0 -z-10">
-                {/* Soft Warm Beige Blobs */}
+                
                 <motion.div
                     animate={{ scale: [1, 1.15, 1], x: [0, 30, 0], y: [0, -20, 0] }}
                     transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
@@ -76,7 +79,7 @@ export default function Hero() {
                             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-100 border border-stone-200 text-stone-700 text-xs font-medium uppercase tracking-wider mb-8"
                         >
                             <Flame size={13} className="text-[#C98A5B]" />
-                            50,000+ Articles Published
+                            {blogs.length} Articles Published
                         </motion.div>
 
                         <motion.h1
@@ -168,8 +171,8 @@ export default function Hero() {
 
                                 <div className="flex items-center justify-between pt-3 border-t border-stone-100">
                                     <div className="flex items-center gap-2">
-                                        <div className={`w-5 h-5 rounded-full ${card.avatarColor} flex items-center justify-center text-[9px] font-bold`}>
-                                            {card.author.charAt(0)}
+                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold`}>
+                                            <img src={card.author.profileImg}  />
                                         </div>
                                         <span className="text-xs font-medium text-stone-600">{card.author}</span>
                                     </div>

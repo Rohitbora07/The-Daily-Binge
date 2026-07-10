@@ -44,7 +44,7 @@ const Textarea = (props) => (
 
 export default function UpdateProfile() {
     const [activeNav, setActiveNav] = useState("profile");
-    const BIO_LIMIT = 200;
+    const BIO_LIMIT = 500;
 
     const location = useLocation();
     const editable = location.pathname.includes("/profile/update");

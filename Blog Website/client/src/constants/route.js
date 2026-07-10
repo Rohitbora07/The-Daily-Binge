@@ -15,6 +15,7 @@ export const LIKE_BLOG = (blogId) => `/blog/${blogId}/like`
 export const BLOGS_BY_CATEGORY = (category) => `/blog/category/${category}`
 export const GET_SINGLE_BLOG = (slug) => `/blog/single/${slug}`
 export const USER_BLOGS = (userId) => `/user/${userId}/blogs`
+export const UPDATE_BLOG = (slug) => `/blog/update/${slug}`
 
 export const CREATE_COMMENT = (blogId) => `/comments/post/${blogId}`
 export const GET_BLOG_COMMENTS = (blogId) => `/comments/blog/${blogId}`

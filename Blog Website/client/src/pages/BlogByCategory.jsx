@@ -8,8 +8,6 @@ import SearchBar from "../components/SearchBar"
 import { motion } from "motion/react"
 
 // const ITEMS_PER_PAGE = 12
-
-
 const sortOptions = ["Newest first", "Oldest first", "Most viewed", "Most liked"];
 
 function BlogByCategory() {

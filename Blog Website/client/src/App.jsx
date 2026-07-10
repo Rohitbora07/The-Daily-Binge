@@ -11,12 +11,17 @@ import UserProfile from './pages/UserProfile'
 import UpdateProfile from './pages/UpdateProfile'
 import DangerZone from './components/settings/DangerZone'
 import BlogDetails from './pages/BlogDetails'
-import BlogListing from './pages/BlogListing'
+import Explore from './pages/Explore'
 import Category from './pages/Category'
 import BlogByCategory from './pages/BlogByCategory'
 import Latest from './pages/explore/Latest'
 import Trending from './pages/explore/Trending'
 import EditorPick from './pages/explore/EditorPick'
+import UpdateBlog from './pages/writer/UpdateBlog'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminBlogManager from './pages/admin/AdminBlogManager'
+import TrendingBlogs from "./pages/admin/BlogManager/TrendingBlogs"
+import LatestBlogs from "./pages/admin/BlogManager/LatestBlogs"
 function App() {
   const location = useLocation()
   const hideLayout = ["/sign-in", "/sign-up","my-blogs"].includes(location.pathname);
@@ -36,12 +41,17 @@ function App() {
       <Route path='/profile/security' element={<DangerZone />} />
       <Route path='/single' element={<BlogDetails />} />
       <Route path='/blog/:slug' element={<BlogDetails />} />
-      <Route path='/explore' element={<BlogListing />} />
+      <Route path='/explore' element={<Explore />} />
       <Route path='/explore/latest' element={<Latest />} />
       <Route path='/explore/trending' element={<Trending />} />
       <Route path='/explore/editor-pick' element={<EditorPick />} />
       <Route path="/explore/category" element={<Category />} />
       <Route path="/explore/category/:category" element={<BlogByCategory />} />
+      <Route path="/blog/update/:slug" element={<UpdateBlog />} />
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/blogs" element={<AdminBlogManager />} />
+      <Route path="/admin/blogs/trending" element={<TrendingBlogs />} />
+      <Route path="/admin/blogs/latest" element={<LatestBlogs />} />
     </Routes>
     {!hideLayout && <Footer />}
 

@@ -1,22 +1,19 @@
-// import React from 'react'
-import {Search} from "lucide-react"
+import { Search } from "lucide-react";
 
-function SearchBar({value, setVal}) {
+export default function SearchBar({ value, setVal }) {
     return (
-        <div className=" flex items-center w-full mb-10">
+        <div className="relative flex items-center w-full">
             <Search
                 size={16}
-                className="absolute ml-4 text-stone-400"
+                className="absolute left-4 text-stone-400 pointer-events-none transition-colors group-focus-within:text-[#0077CC]"
             />
             <input
                 type="text"
                 value={value}
                 onChange={(e) => setVal(e.target.value)}
-                placeholder="Filter Blogs....."
-                className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-stone-200 bg-white text-sm text-stone-700 placeholder:text-stone-400 shadow-sm focus:outline-none focus:border-[#0077CC] focus:ring-2 focus:ring-[#E0F0FF] transition-all"
+                placeholder="Search blogs by title or author..."
+                className="w-full pl-11 pr-4 py-3 bg-white text-sm text-stone-700 placeholder:text-stone-400 rounded-xl border border-stone-200/80 shadow-sm focus:outline-none focus:border-[#0077CC] focus:bg-white transition-all duration-200"
             />
         </div>
-    )
+    );
 }
-
-export default SearchBar

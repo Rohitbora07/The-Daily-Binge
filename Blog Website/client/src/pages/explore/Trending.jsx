@@ -47,7 +47,8 @@ function Trending() {
         getTredingBlogs()
     }, [])
 
-    const tags = currentBlogs && [...new Set(currentBlogs.map(blog => blog.tags).flat())].slice(0, 20)
+    const tags = currentBlogs ? [...new Set(currentBlogs.map(blog => blog.tags).flat())].slice(0, 20) : []
+    const trendingAuthors = currentBlogs ? [... new Map(currentBlogs.map(blog => [blog.author._id, blog.author])).values()] : []
 
     const categoryMap = new Map()
     if (currentBlogs) {
@@ -199,7 +200,7 @@ function Trending() {
                     </div>
 
                     <div className="hidden lg:block w-72 xl:w-80 flex-shrink-0 sticky top-16">
-                        <BlogSidebar tags={tags} categoryMap={categoryMap} />
+                        <BlogSidebar tags={tags} categoryMap={categoryMap} authors={trendingAuthors} title="Trending" />
                     </div>
                 </div>
             </div>

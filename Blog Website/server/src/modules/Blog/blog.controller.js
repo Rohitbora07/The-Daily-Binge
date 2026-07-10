@@ -12,7 +12,7 @@ export const createBlog = async (req, res) => {
             return res.status(400).json({ success: false, message: "Unauthorized User" })
         }
 
-        const { title, content, category, tags, visibility, allowComments, excerpt, status } = req.body
+        const { title, content, category, tags, visibility, allowComments, excerpt, status, readTime, wordCount } = req.body
 
         if (!title || !content || !category || !excerpt) return res.status(400).json({ success: false, message: "Missing required details" })
 
@@ -45,6 +45,8 @@ export const createBlog = async (req, res) => {
             slug,
             excerpt,
             content,
+            readTime: readTime || 0,
+            wordCount: wordCount || 0,
             category: category.toLowerCase(),
             visibility: status === "published" ? "public" : visibility || "private",
             tags: tags ? Array.isArray(tags) ? tags : tags.split(",").map(tag => tag.trim()) : [],
@@ -167,7 +169,7 @@ export const updateBlog = async (req, res) => {
             return res.status(403).json({ success: false, message: "Unauthorized User" })
         }
 
-        const { title, content, category, tags, visibility, allowComments } = req.body
+        const { title, content, category, tags, visibility, allowComments, readTime, wordCount, excerpt } = req.body
 
         if (title) {
             blog.title = title
@@ -176,12 +178,25 @@ export const updateBlog = async (req, res) => {
                 strict: true
             })
         }
+        const isCoverImageUpdated = req.file ? true : false
+        if (isCoverImageUpdated) {
+            await cloudinary.uploader.destroy(blog.coverImage.publicId);
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder: "blog/cover"
+            });
+            blog.coverImage = {
+                url: result.secure_url,
+                publicId: result.public_id
+            };
+        }
         if (content) blog.content = content
         if (category) blog.category = category
         if (tags) blog.tags = Array.isArray(tags) ? tags : tags.split(",").map(tag => tag.trim())
         if (visibility) blog.visibility = visibility
         if (allowComments !== undefined) blog.allowComments = allowComments
-
+        if (readTime) blog.readTime = readTime
+        if (wordCount) blog.wordCount = wordCount
+        if (excerpt) blog.excerpt = excerpt
         await blog.save()
 
         return res.status(200).json({ success: true, message: "Blog Updated successfully" })

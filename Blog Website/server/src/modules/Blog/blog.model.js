@@ -86,6 +86,10 @@ const blogSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    wordCount: {
+        type: Number,
+        default: 0
+    },
     excerpt: {
         type: String,
         default: ''
@@ -97,7 +101,7 @@ const blogSchema = new mongoose.Schema({
     searchKeywords: {
         type: [String],
         default: []
-    }
+    },
 }, { timestamps: true });
 
 blogSchema.index({ author: 1 });

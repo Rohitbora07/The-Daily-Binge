@@ -61,7 +61,7 @@ export default function CreateBlog() {
             formData.append("status", status);
             if (coverImage) formData.append("coverImage", coverImage);
             formData.append("allowComments", allowComments);
-            
+
             const { data } = await api.post(CREATE_BLOG, formData);
             console.log(data.blog);
 
@@ -76,40 +76,36 @@ export default function CreateBlog() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="min-h-screen bg-white mt-20"
+            className="min-h-screen bg-white mt-16 sm:mt-20"
         >
-            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
-                <div className="flex gap-10 xl:gap-14 items-start">
+            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10">
+                <div className="flex flex-col lg:flex-row gap-8 lg:gap-10 xl:gap-14 items-start">
 
-
-                    <div className="flex-1 min-w-0">
+                    <div className="w-full flex-1 min-w-0">
 
                         <CoverImageUpload preview={coverImage} setPreview={setCoverImage} />
 
-
-                        <p className="text-3xl font-medium text-stone-500 mb-2 font-serif">Title</p>
-                        <div className="mb-4 border-2 border-stone-300 rounded-lg p-4">
+                        <p className="text-2xl sm:text-3xl font-medium text-stone-500 mb-2 font-serif">Title</p>
+                        <div className="mb-4 border-2 border-stone-300 rounded-lg p-3 sm:p-4">
                             <textarea
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Your post title…"
                                 rows={2}
-                                className="w-full resize-none outline-none text-[#0D1B2A] placeholder:text-stone-300 font-serif text-base"
+                                className="w-full resize-none outline-none text-[#0D1B2A] placeholder:text-stone-300 font-serif text-sm sm:text-base"
                             />
                         </div>
 
-
-                        <p className="text-3xl font-medium text-stone-500 mb-2 font-serif">Excerpt</p>
-                        <div className="mb-8 border-2 border-stone-300 rounded-lg p-4">
+                        <p className="text-2xl sm:text-3xl font-medium text-stone-500 mb-2 font-serif">Excerpt</p>
+                        <div className="mb-6 sm:mb-8 border-2 border-stone-300 rounded-lg p-3 sm:p-4">
                             <textarea
                                 value={excerpt}
                                 onChange={(e) => setExcerpt(e.target.value)}
                                 placeholder="A brief excerpt or description…"
                                 rows={2}
-                                className="w-full resize-none outline-none text-stone-500 placeholder:text-stone-300 font-serif text-base"
+                                className="w-full resize-none outline-none text-stone-500 placeholder:text-stone-300 font-serif text-sm sm:text-base"
                             />
                         </div>
-
 
                         <div className="flex items-center gap-4 mb-6">
                             <div className="flex-1 h-px bg-stone-500" />
@@ -119,10 +115,9 @@ export default function CreateBlog() {
                             <div className="flex-1 h-px bg-stone-500" />
                         </div>
 
-
                         <BlogEditorToolbar editor={editor} />
 
-                        <div className="relative border border-stone-300 rounded-3xl p-6">
+                        <div className="relative border border-stone-300 rounded-2xl sm:rounded-3xl p-4 sm:p-6">
                             <TiptapEditor editor={editor} />
 
                             {currentText.length > 0 && (
@@ -138,7 +133,7 @@ export default function CreateBlog() {
                             )}
                         </div>
 
-                        <div className="h-16" />
+                        <div className="h-8 sm:h-16" />
                     </div>
 
                     <PublishSidebar
@@ -157,3 +152,5 @@ export default function CreateBlog() {
         </motion.div>
     );
 }
+
+

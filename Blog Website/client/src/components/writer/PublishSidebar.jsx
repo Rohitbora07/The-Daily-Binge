@@ -1,19 +1,38 @@
-import { Send, FileText, MessageSquare, Globe, Lock } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { Send, FileText, MessageSquare, Globe, Lock, Search, Check, ChevronDown } from "lucide-react";
 import TagInput from "./TagInput";
 import Select from "./OptionSelect";
 
-const categories = ["AI", "Animation", "Anime", "Art", "Astronomy", "Adventure", "Books", "Business", "Basketball", "Baseball", "Boxing", "Beauty", "Biography", "Comics", "Cartoons", "Cinema", "Celebrity", "Cricket", "Cars", "Culture", "Cooking", "Design", "Drama", "Documentaries", "DIY", "Digital Culture", "Data Science", "Entertainment", "Esports", "Education", "Environment", "Economics", "Exploration", "Engineering", "Fashion", "Food", "Fitness", "Football", "Formula 1", "Finance", "Fantasy", "Gaming", "Gadgets", "Geography", "Government", "Green Living", "Graphic Design", "Gardening", "Health", "History", "Hollywood", "Horror", "Home & Living", "Hiking", "Humor", "Internet", "Innovation", "Influencers", "India", "Investment", "Interviews", "Indie", "Journalism", "Japan", "Jobs", "Justice", "Jazz", "K-Pop", "Korean Culture", "Knowledge", "Kickboxing", "Kitchen", "Lifestyle", "Literature", "Linux", "Leadership", "Law", "Luxury", "Local News", "Movies", "Music", "Manga", "Marvel", "Memes", "Mobile", "Mythology", "Nature", "News", "Netflix", "Nutrition", "Nintendo", "Novels", "Neuroscience", "OTT", "Olympics", "Open Source", "Ocean", "Outdoors", "Opinion", "Pop Culture", "Programming", "Photography", "Psychology", "Politics", "Podcasts", "Physics", "Philosophy", "Quantum Computing", "Quantum Physics", "Quizzes", "Quotes", "Q&A", "Quick Reads", "Reviews", "Robotics", "Recipes", "Racing", "Reality TV", "Renewable Energy", "Religion", "Sports", "Science", "Space", "Smartphones", "Startups", "Streaming", "Software", "Superheroes", "Technology", "TV Shows", "Travel", "Tennis", "Tutorials", "True Crime", "Tourism", "UFC", "Universities", "Urban Culture", "Universe", "Updates", "User Stories", "Video Games", "Virtual Reality", "Visual Arts", "Vehicles", "Viral Trends", "Volleyball", "Vegan", "Web Series", "WWE", "Wildlife", "World News", "Wearables", "Wellness", "Web Development", "Xbox", "X-Men", "X-Factor", "YouTube", "Yoga", "Youth Culture", "Young Adult", "Zoology", "Zoos","Zero Waste", "Zodiac"]
+const categories = ["AI", "Animation", "Anime", "Art", "Astronomy", "Adventure", "Books", "Business", "Basketball", "Baseball", "Boxing", "Beauty", "Biography", "Comics", "Cartoons", "Cinema", "Celebrity", "Cricket", "Cars", "Culture", "Cooking", "Design", "Drama", "Documentaries", "DIY", "Digital Culture", "Data Science", "Entertainment", "Esports", "Education", "Environment", "Economics", "Exploration", "Engineering", "Fashion", "Food", "Fitness", "Football", "Formula 1", "Finance", "Fantasy", "Gaming", "Gadgets", "Geography", "Government", "Green Living", "Graphic Design", "Gardening", "Health", "History", "Hollywood", "Horror", "Home & Living", "Hiking", "Humor", "Internet", "Innovation", "Influencers", "India", "Investment", "Interviews", "Indie", "Journalism", "Japan", "Jobs", "Justice", "Jazz", "K-Pop", "Korean Culture", "Knowledge", "Kickboxing", "Kitchen", "Lifestyle", "Literature", "Linux", "Leadership", "Law", "Luxury", "Local News", "Movies", "Music", "Manga", "Marvel", "Memes", "Mobile", "Mythology", "Nature", "News", "Netflix", "Nutrition", "Nintendo", "Novels", "Neuroscience", "OTT", "Olympics", "Open Source", "Ocean", "Outdoors", "Opinion", "Pop Culture", "Programming", "Photography", "Psychology", "Politics", "Podcasts", "Physics", "Philosophy", "Quantum Computing", "Quantum Physics", "Quizzes", "Quotes", "Q&A", "Quick Reads", "Reviews", "Robotics", "Recipes", "Racing", "Reality TV", "Renewable Energy", "Religion", "Sports", "Science", "Space", "Smartphones", "Startups", "Streaming", "Software", "Superheroes", "Technology", "TV Shows", "Travel", "Tennis", "Tutorials", "True Crime", "Tourism", "UFC", "Universities", "Urban Culture", "Universe", "Updates", "User Stories", "Video Games", "Virtual Reality", "Visual Arts", "Vehicles", "Viral Trends", "Volleyball", "Vegan", "Web Series", "WWE", "Wildlife", "World News", "Wearables", "Wellness", "Web Development", "Xbox", "X-Men", "X-Factor", "YouTube", "Yoga", "Youth Culture", "Young Adult", "Zoology", "Zoos","Zero Waste", "Zodiac"];
 
 export default function PublishSidebar({ onPublish, setCategory, category, setVisibility, visibility, setAllowComments, allowComments, tags, setTags }) {
-    
-    
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const filteredCategories = useMemo(() => {
+        if (!searchQuery.trim()) return categories;
+        return categories.filter((cat) =>
+            cat.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [searchQuery]);
 
     return (
         <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0">
-            <div className="sticky top-[72px] space-y-5">
+            <div className="sticky top-[72px] flex flex-col gap-5">
 
-                {/* Publish actions */}
-                <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm">
+                {/* Publish actions - Appears at the top on desktop, slides to the bottom on mobile */}
+                <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm order-last lg:order-first">
                     <h3 className="text-sm font-semibold text-stone-800 mb-4">
                         Publish
                     </h3>
@@ -35,21 +54,71 @@ export default function PublishSidebar({ onPublish, setCategory, category, setVi
                                 <FileText size={14} />
                                 Save draft
                             </button>
-
                         </div>
                     </div>
                 </div>
 
                 {/* Settings */}
-                <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm space-y-5">
+                <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm space-y-5 order-first lg:order-none">
                     <h3 className="text-sm font-semibold text-stone-800">Settings</h3>
 
-                    <Select
-                        label="Category"
-                        value={category}
-                        onChange={setCategory}
-                        options={categories}
-                    />
+                    {/* Searchable Category Dropdown */}
+                    <div className="relative" ref={dropdownRef}>
+                        <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                            Category
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="w-full flex items-center justify-between bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0077CC] focus:ring-2 focus:ring-[#E0F0FF] transition-all text-left"
+                        >
+                            <span className={category ? "text-stone-800" : "text-stone-400"}>
+                                {category || "Select a category..."}
+                            </span>
+                            <ChevronDown size={16} className={`text-stone-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                        </button>
+
+                        {isOpen && (
+                            <div className="absolute z-50 mt-1.5 w-full bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden max-h-60 flex flex-col">
+                                <div className="p-2 border-b border-stone-100 flex items-center gap-2 bg-stone-50">
+                                    <Search size={14} className="text-stone-400 flex-shrink-0" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search categories..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full bg-transparent text-sm text-stone-800 placeholder-stone-400 focus:outline-none"
+                                        autoFocus
+                                    />
+                                </div>
+                                <div className="overflow-y-auto flex-1 divide-y divide-stone-50">
+                                    {filteredCategories.length > 0 ? (
+                                        filteredCategories.map((cat) => (
+                                            <button
+                                                key={cat}
+                                                type="button"
+                                                onClick={() => {
+                                                    setCategory(cat);
+                                                    setIsOpen(false);
+                                                    setSearchQuery("");
+                                                }}
+                                                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors text-left"
+                                            >
+                                                <span className={category === cat ? "font-medium text-[#0077CC]" : ""}>
+                                                    {cat}
+                                                </span>
+                                                {category === cat && <Check size={14} className="text-[#0077CC]" />}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="px-4 py-3 text-sm text-stone-400 text-center">
+                                            No categories found
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     <Select
                         label="Visibility"
@@ -66,23 +135,12 @@ export default function PublishSidebar({ onPublish, setCategory, category, setVi
                         <p className="text-xs text-stone-500 leading-relaxed">
                             {visibility === "public"
                                 ? "This post will be visible to everyone on the internet."
-                                :  "Only you can see this post. It won't appear publicly."}
+                                : "Only you can see this post. It won't appear publicly."}
                         </p>
                     </div>
 
-                    {/* <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-2">
-                            Slug
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="my-blog-post-title"
-                            className="w-full px-4 py-3 rounded-xl border border-stone-200 text-sm text-stone-700 placeholder:text-stone-400 focus:outline-none focus:border-[#0077CC] focus:ring-2 focus:ring-[#E0F0FF] transition-all font-mono"
-                        />
-                    </div> */}
-
                     {/* Allow comments toggle */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between pt-1">
                         <div className="flex items-center gap-2">
                             <MessageSquare size={15} className="text-stone-400" />
                             <span className="text-sm font-medium text-stone-700">
@@ -90,6 +148,7 @@ export default function PublishSidebar({ onPublish, setCategory, category, setVi
                             </span>
                         </div>
                         <button
+                            type="button"
                             onClick={() => setAllowComments(!allowComments)}
                             className={`relative w-10 h-5.5 rounded-full transition-colors duration-200 focus:outline-none ${allowComments ? "bg-[#0077CC]" : "bg-stone-200"
                                 }`}
@@ -101,11 +160,10 @@ export default function PublishSidebar({ onPublish, setCategory, category, setVi
                             />
                         </button>
                     </div>
-
-                    
                 </div>
 
-                <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm">
+                {/* Tags */}
+                <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm order-none">
                     <h3 className="text-sm font-semibold text-stone-800 mb-4">Tags</h3>
                     <TagInput tags={tags} setTags={setTags} />
                 </div>

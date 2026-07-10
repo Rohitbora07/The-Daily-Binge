@@ -23,6 +23,7 @@ export const userLogin = async (req, res) => {
         if (!isMatched) {
             return res.status(401).json({ success: false, message: "Incorrect Password" })
         }
+        console.log("LOGIN SECRET:", process.env.JWT_SECRET);
 
         const token = jwt.sign({
             id: user._id,
@@ -403,6 +404,7 @@ export const getUserProfile = async (req, res) => {
             visibility: "public"
         })
         .select("title slug coverImage views likes commentsCount createdAt category tags")
+        .populate("author", "name profileImg")
         .sort({ createdAt: -1 });
 
         return res.status(200).json({

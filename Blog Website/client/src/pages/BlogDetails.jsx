@@ -40,7 +40,11 @@ export default function BlogDetails() {
     },[blog?._id])
 
     if (!blog) {
-        return <div>Loading...</div>;
+        return (
+            <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0077CC]"></div>
+            </div>
+        );
     }
 
     const formattedDate = new Date(blog.publishedAt).toLocaleDateString("en-US", {

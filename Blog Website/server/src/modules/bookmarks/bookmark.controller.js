@@ -8,6 +8,14 @@ export const addBookmark = async (req, res) => {
         if (!blogId || !userId) {
             return res.status(400).json({ success: false, message: "Missing required details" })
         }
+        const existing = await Bookmark.findOne({
+            user: userId,
+            blog: blogId
+        });
+
+        if (existing) {
+            return res.status(400).json({success: false,message: "Already bookmarked"});
+        }
         const blog = await Blog.findById(blogId)
         if (!blog) {
             return res.status(404).json({ success: false, message: "Blog not found" })
@@ -90,7 +98,7 @@ export const isCurrentUserBookmarked = async (req, res) => {
         return res.status(400).json({ success: false, message: "Missing required details" })
     }
     try {
-        const bookmark = await Bookmark.findOneAndDelete({ blog: blogId, user: userId })
+        const bookmark = await Bookmark.findOne({ blog: blogId, user: userId })
         let isBookmarked;
         if (!bookmark) {
             return res.status(200).json({ success: true, message: "Bookmark not found", isBookmarked: false })

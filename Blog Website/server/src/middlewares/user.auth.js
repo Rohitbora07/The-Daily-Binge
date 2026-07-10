@@ -9,6 +9,8 @@ export const userAuth = async (req, res, next) => {
             return res.json({ success: false, message: " Unauthorized User" })
         }
 
+        console.log("Token:", token);
+        console.log("VERIFY SECRET:", process.env.JWT_SECRET);
         const tokenDecode = jwt.verify(token, process.env.JWT_SECRET)
 
         const user = await User.findById(tokenDecode.id)

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Heart, Bookmark, Link2, Check } from "lucide-react";
+import { motion } from "motion/react";
+import { Heart, Bookmark } from "lucide-react";
 import { FaTwitter, FaLinkedin, FaFacebook } from "react-icons/fa"
 import api from "../../api/axios";
 import { BLOG_BOOKMARK, LIKE_BLOG, CHECK_USER_BLOG_BOOKMARK, CREATE_BOOKMARK, DELETE_BOOKMARK } from "../../constants/route";
@@ -37,16 +37,20 @@ export default function BlogShareBar({ blog, liked, setLiked }) {
 
     const handleBookmark = async () => {
         try {
-            const { data } = await api.post(CREATE_BOOKMARK(blog?._id))
-            console.log(data)
+            await api.post(CREATE_BOOKMARK(blog?._id))
+            // console.log(data)
+            setBookmarked(true);
+            setBookmarks(prev => prev + 1);
         } catch (error) {
             console.log(error)
         }
     }
     const handleRemoveBookmark = async () => {
     try {
-        const {data} = await api.delete(DELETE_BOOKMARK(blog?._id))
-        console.log(data)
+        await api.delete(DELETE_BOOKMARK(blog?._id))
+        // console.log(data)
+        setBookmarked(false);
+        setBookmarks(prev => prev - 1);
     } catch (error) {
         console.log(error)
     }
