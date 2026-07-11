@@ -18,6 +18,6 @@ userRouter.post("/reset-password", userAuth, passReset)
 userRouter.get("/me", userAuth, getCurrentUser)
 userRouter.put("/update-profile", userAuth, upload.fields([{ name: "profileImg", maxCount: 1 }, { name: "backgroundImg", maxCount: 1 }]), updateUserProfile)
 userRouter.get("/:userId/blogs", userAuth, getUserBlogs)
-userRouter.get("/profile/:userId", userAuth, getUserProfile)
+userRouter.get("/profile/:id", userAuth, getUserProfile)
 
 export default userRouter

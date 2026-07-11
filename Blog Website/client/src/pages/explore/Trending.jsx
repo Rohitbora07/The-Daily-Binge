@@ -1,43 +1,56 @@
 import { motion, AnimatePresence } from "motion/react";
-import { Flame, ArrowRight } from "lucide-react";
+import { Flame } from "lucide-react";
 import FeaturedBlog from "../../components/FeaturedBlog"
 import TrendingSidebar from "../../components/trending/TrendingSidebar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
 import { TRENDING_BLOGS } from "../../constants/route";
 import BlogStripeList from "../../components/BlogStripeList";
 import BlogSidebar from "../../components/blog/BlogSidebar";
+import Pagination from "../../components/Pagination"
 
 
 const periods = ["Today", "This Week", "This Month"];
 
-
-
-
 function Trending() {
     const [period, setPeriod] = useState("Today");
 
-    const [todayTrendingBlogs, setTodayTrendingBlogs] = useState(null)
-    const [weeklyTrendingBlogs, setWeeklyTrendingBlogs] = useState(null)
-    const [monthlyTrendingBlogs, setMonthlyTrendingBlogs] = useState(null)
+    const [todayTrendingBlogs, setTodayTrendingBlogs] = useState([])
+    const [weeklyTrendingBlogs, setWeeklyTrendingBlogs] = useState([])
+    const [monthlyTrendingBlogs, setMonthlyTrendingBlogs] = useState([])
     const [loading, setLoading] = useState(true)
 
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1);
+    const [monthlyPage, setMonthlyPage] = useState(1)
+    const [totalmonthlyPages, setTotalMonthlyPages] = useState(1)
+    const [weeklyPage, setweeklyPage] = useState(1)
+    const [totalWeeklyPage, setTotalWeeklyPage] = useState(1)
+
     const currentBlogs = period === "Today" ? todayTrendingBlogs : period === "This Week" ? weeklyTrendingBlogs : monthlyTrendingBlogs
+    const currentPage = period === "Today" ? page : period === "This Week" ? weeklyPage : monthlyPage
+    const currentTotalPages = period === "Today" ? totalPages : period === "This Week" ? totalWeeklyPage : totalmonthlyPages
+
+
+    const contentRef = useRef(null)
 
     useEffect(() => {
         const getTredingBlogs = async () => {
             setLoading(true)
             try {
 
-                const { data } = await api.get(`${TRENDING_BLOGS}?range=24h`)
-                const { data: weeklyData } = await api.get(`${TRENDING_BLOGS}?range=week`)
-                const { data: monthlyData } = await api.get(`${TRENDING_BLOGS}?range=month`)
-                // console.log("daily:", data.blogs)
-                setTodayTrendingBlogs(data.blogs)
-                setWeeklyTrendingBlogs(weeklyData.blogs)
-                setMonthlyTrendingBlogs(monthlyData.blogs)
-                // console.log("Weekly:", weeklyData.blogs)
-                // console.log("Monthly:", monthlyData.blogs)
+                const { data } = await api.get(`${TRENDING_BLOGS}?range=24h&page=${page}&limit=5`)
+                const { data: weeklyData } = await api.get(`${TRENDING_BLOGS}?range=week&page=${weeklyPage}&limit=5`)
+                const { data: monthlyData } = await api.get(`${TRENDING_BLOGS}?range=month&page=${monthlyPage}&limit=5`)
+
+                setTodayTrendingBlogs(data.blogs || [])
+                setWeeklyTrendingBlogs(weeklyData.blogs || [])
+                setMonthlyTrendingBlogs(monthlyData.blogs || [])
+
+                setTotalPages(data.totalPages)
+                setTotalWeeklyPage(weeklyData.totalPages)
+                setTotalMonthlyPages(monthlyData.totalPages)
+
             } catch (error) {
                 console.log(error)
             } finally {
@@ -45,7 +58,7 @@ function Trending() {
             }
         }
         getTredingBlogs()
-    }, [])
+    }, [page, monthlyPage, weeklyPage])
 
     const tags = currentBlogs ? [...new Set(currentBlogs.map(blog => blog.tags).flat())].slice(0, 20) : []
     const trendingAuthors = currentBlogs ? [... new Map(currentBlogs.map(blog => [blog.author._id, blog.author])).values()] : []
@@ -55,6 +68,15 @@ function Trending() {
         for (const item of currentBlogs) {
             const categ = item.category;
             categoryMap.set(categ, (categoryMap.get(categ) || 0) + 1)
+        }
+    }
+
+    const handlePageChange = (newPage) => {
+        if (period === "Today") setPage(newPage)
+        else if (period === "This Week") setweeklyPage(newPage)
+        else  setMonthlyPage(newPage)
+        if (contentRef.current) {
+            contentRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
         }
     }
 
@@ -148,25 +170,29 @@ function Trending() {
                         </AnimatePresence>
 
                         {/* Divider */}
-                        <div className="flex items-center gap-4">
+                        {
+                            currentBlogs.length > 0 &&
+                             <div className="flex items-center gap-4">
                             <div className="flex-1 h-px bg-stone-200" />
                             <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest whitespace-nowrap">
                                 Leaderboard
                             </span>
                             <div className="flex-1 h-px bg-stone-200" />
                         </div>
+                        }
+                        
 
                         {/* Leaderboard #4+ */}
                         <AnimatePresence mode="wait">
-                            <motion.div
-                                key={period + "-list"}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.22 }}
-                            >
+                            {currentBlogs.length > 0 ? (
                                 <BlogStripeList blogs={currentBlogs} />
-                            </motion.div>
+                            ) : (
+                                <div className="text-center py-12 text-stone-400">No stories found matching the active criteria.</div>
+                            )}
+                            <Pagination currentPage={currentPage}
+                                totalPages={currentTotalPages}
+                                onPageChange={handlePageChange}
+                            />
                         </AnimatePresence>
 
                         {/* Sidebar on tablet/mobile — renders below feed */}
@@ -174,7 +200,7 @@ function Trending() {
                             <TrendingSidebar />
                         </div>
 
-                        {/* Bottom CTA */}
+                        {/* Bottom CTA
                         <motion.div
                             initial={{ opacity: 0, y: 16 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -196,7 +222,7 @@ function Trending() {
                                 View All Articles
                                 <ArrowRight size={14} />
                             </motion.button>
-                        </motion.div>
+                        </motion.div> */}
                     </div>
 
                     <div className="hidden lg:block w-72 xl:w-80 flex-shrink-0 sticky top-16">

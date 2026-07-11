@@ -1,20 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import api from "../../api/axios"
+import {  ADMIN_ALL_BLOGS_ROUTE } from "../../constants/route";
 import { Trash2, FilePlus, ArrowLeft, CheckSquare, Square } from "lucide-react";
 import { Link } from "react-router-dom";
 import AdminBlogStripeItem from "./AdminBlogStripeItem";
 import SearchBar from "../../components/SearchBar";
-
-const dummyBlogs = [
-    { id: 1, slug: "typescript-not-optional", title: "Why TypeScript Is No Longer Optional", category: "Development", author: "Sarah Chen", views: "1.4K", likes: 215, readTime: 6, status: "Published", isFeatured: true },
-    { id: 2, slug: "building-vite-2025", title: "Building with Vite in 2025", category: "Tools", author: "James Okafor", views: 920, likes: 88, readTime: 4, status: "Published", isFeatured: false },
-    { id: 3, slug: "motion-design-guide", title: "A Beginner's Guide to Motion Design", category: "Design", author: "Alex Morgan", views: 0, likes: 0, readTime: 7, status: "Pending", isFeatured: false },
-    { id: 4, slug: "state-management-2025", title: "State Management in 2025", category: "Architecture", author: "Tom Brennan", views: 12, likes: 2, readTime: 5, status: "Draft", isFeatured: false },
-];
+import Pagination from "../../components/Pagination";
 
 export default function AdminBlogManager() {
-    const [blogs, setBlogs] = useState(dummyBlogs);
+    const [loading, setLoading] = useState(true)
+    const [allBlogs, setAllBlogs] = useState([])
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedIds, setSelectedIds] = useState([]);
+
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const contentRef = useRef(null)
+
+    const handlePageChange = (newPage) => {
+        setPage(newPage);
+        if (contentRef.current) {
+            contentRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }
 
     // Selection Handlers
     const handleSelectAll = () => {
@@ -32,30 +40,54 @@ export default function AdminBlogManager() {
     // Item Action Triggers
     const handleDelete = (id) => {
         if (confirm("Permanently delete this blog article?")) {
-            setBlogs(prev => prev.filter(b => b.id !== id));
+            setAllBlogs(prev => prev.filter(b => b.id !== id));
             setSelectedIds(prev => prev.filter(item => item !== id));
         }
     };
 
     const handleToggleStatus = (id) => {
-        setBlogs(prev => prev.map(b => b.id === id ? { ...b, status: b.status === "Published" ? "Draft" : "Published" } : b));
+        setAllBlogs(prev => prev.map(b => b.id === id ? { ...b, status: b.status === "Published" ? "Draft" : "Published" } : b));
     };
 
     const handleToggleFeatured = (id) => {
-        setBlogs(prev => prev.map(b => b.id === id ? { ...b, isFeatured: !b.isFeatured } : b));
+        setAllBlogs(prev => prev.map(b => b.id === id ? { ...b, isFeatured: !b.isFeatured } : b));
     };
 
     const handleBulkDelete = () => {
         if (confirm(`Are you sure you want to delete the ${selectedIds.length} selected items?`)) {
-            setBlogs(prev => prev.filter(b => !selectedIds.includes(b.id)));
+            setAllBlogs(prev => prev.filter(b => !selectedIds.includes(b.id)));
             setSelectedIds([]);
         }
     };
 
     // Filtering Pipeline
-    const filteredBlogs = blogs.filter(b => {
-        return b.title.toLowerCase().includes(searchTerm.toLowerCase()) || b.author.toLowerCase().includes(searchTerm.toLowerCase());
+    const filteredBlogs = allBlogs.filter(b => {
+        return b.title.toLowerCase().includes(searchTerm.toLowerCase()) || b.author.name.toLowerCase().includes(searchTerm.toLowerCase());
     });
+
+    useEffect(()=>{
+            const getAdminStats = async () => {
+                try {
+                    setLoading(true)
+                    const {data} = await api.get(`${ADMIN_ALL_BLOGS_ROUTE}?page=${page}&limit=8`)
+                    setAllBlogs(data.blogs || [])
+                    setTotalPages(data.totalPages)
+                    console.log(data)
+                } catch (error) {
+                    console.log(error)
+                } finally {
+                    setLoading(false)
+                }
+            }
+            getAdminStats()
+        },[page])
+        if (loading) {
+            return (
+                <div className="min-h-screen bg-stone-50/60 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-stone-200 border-t-[#0077CC]"></div>
+                </div>
+            );
+        }
 
     return (
         <div className="min-h-screen bg-stone-50/60 font-sans antialiased text-stone-800">
@@ -124,6 +156,11 @@ export default function AdminBlogManager() {
                         </div>
                     )}
                 </div>
+                <Pagination 
+                    currentPage={page} 
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange} 
+                    />
             </div>
         </div>
     );

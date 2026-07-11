@@ -93,7 +93,7 @@ export default function AdminBlogStripeItem({ blog, index, isSelected, onSelect,
                         </button>
 
                         <button 
-                            onClick={() => navigate(`/admin/edit/${blog.slug}`)}
+                            onClick={() => navigate(`/admin/blogs/details/${blog.slug}`)}
                             title="Edit"
                             className="p-2 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors border border-transparent"
                         >

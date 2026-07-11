@@ -3,7 +3,7 @@ export const LOGIN_ROUTE = "/user/login"
 export const SIGNUP_ROUTE = "/user/register"
 export const CURRENT_USER_ROUTE = "/user/me"
 export const UPDATE_PROFILE_ROUTE = "/user/update-profile"
-export const USER_DETAIL_ROUTE = (userId) => `/user/profile/${userId}`
+export const USER_DETAIL_ROUTE = (id) => `/user/profile/${id}`
 
 export const CREATE_BLOG = "/blog/create"
 export const GET_ALL_ADMIN_BLOGS = "/blog/admin/all"
@@ -25,3 +25,12 @@ export const DELETE_BOOKMARK = (blogId) => `/bookmark/delete/${blogId}`
 
 export const BLOG_BOOKMARK = (blogId) => `/bookmark/blog/${blogId}`
 export const CHECK_USER_BLOG_BOOKMARK = (blogId) => `/bookmark/user/${blogId}`
+
+// admin routes
+
+export const FEATURE_BLOG_ROUTE = (id) => `/admin/blog/${id}/feature`
+export const ADMIN_DELETE_ONE_BLOG = (id) => `/admin/blog/${id}/delete`
+export const ADMIN_DELETE_MULTIPLE_BLOGS = `/admin/blog/multi/delete`
+export const ADMIN_STATS_ROUTE = "/admin/stats"
+export const ADMIN_ALL_BLOGS_ROUTE = "/admin/blog/all"
+export const ADMIN_ALL_USERS_ROUTE = "/admin/users/all"

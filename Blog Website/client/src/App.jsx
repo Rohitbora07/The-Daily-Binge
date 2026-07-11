@@ -22,6 +22,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminBlogManager from './pages/admin/AdminBlogManager'
 import TrendingBlogs from "./pages/admin/BlogManager/TrendingBlogs"
 import LatestBlogs from "./pages/admin/BlogManager/LatestBlogs"
+import AdminBlogDetails from './pages/admin/BlogManager/BlogOperations'
 function App() {
   const location = useLocation()
   const hideLayout = ["/sign-in", "/sign-up","my-blogs"].includes(location.pathname);
@@ -52,6 +53,7 @@ function App() {
       <Route path="/admin/blogs" element={<AdminBlogManager />} />
       <Route path="/admin/blogs/trending" element={<TrendingBlogs />} />
       <Route path="/admin/blogs/latest" element={<LatestBlogs />} />
+      <Route path="/admin/blogs/details/:slug" element={<AdminBlogDetails />} />
     </Routes>
     {!hideLayout && <Footer />}
 

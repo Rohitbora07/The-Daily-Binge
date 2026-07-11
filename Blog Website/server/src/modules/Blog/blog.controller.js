@@ -5,6 +5,7 @@ import fs from "fs/promises"
 import { calculateTrendingScore } from "../../utils/calculateTrending.js"
 
 
+
 export const createBlog = async (req, res) => {
     try {
         const userId = req.userId
@@ -79,8 +80,24 @@ export const getUserBlogs = async (req, res) => {
             return res.status(400).json({ success: false, message: "Unauthorized User" })
         }
 
-        const blogs = await Blog.find({ author: userId }).sort({ createdAt: -1 })
-        return res.status(200).json({ success: true, blogs })
+        const filter = {
+            author: userId,
+            status: "published",
+            visibility: "public"
+        }
+
+        const page = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || 15
+
+        const skip = (page - 1) * limit
+
+        const blogs = await Blog.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit)
+
+        const totalBlogs = await Blog.countDocuments(filter)
+
+        return res.status(200).json({
+            success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit)
+        })
     } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({
@@ -92,8 +109,20 @@ export const getUserBlogs = async (req, res) => {
 
 export const getAllBlogs = async (req, res) => {
     try {
-        const blogs = await Blog.find().sort({ createdAt: -1 }).populate("author", "name email profileImg")
-        return res.status(200).json({ success: true, blogs })
+        const page = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || 15
+
+        const skip = (page - 1) * limit
+
+        const totalBlogs = await Blog.countDocuments()
+
+        const blogs = await Blog.find().sort({ createdAt: -1 }).populate("author", "name email profileImg").skip(skip).limit(limit)
+
+        if(blogs.length === 0) {
+            return res.status(404).json({ success: false, message: "No blogs found" })
+        }
+
+        return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
     } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({
@@ -108,19 +137,30 @@ export const getSingleBlog = async (req, res) => {
     if (!slug) {
         return res.status(400).json({ success: false, message: "Missing required details" })
     }
+    const userId = req.userId
     try {
+        const filter = { slug };
+
+        
         const blog = await Blog.findOne({ slug }).populate("author", "name email profileImg bio")
         if (!blog) {
             return res.status(404).json({ success: false, message: "Blog not found" })
         }
+
+        const isOwner = userId && blog.author.toString() !== userId
+
+        if (!isOwner && (blog.status !== "published" || blog.visibility !== "public")) {
+            return res.status(403).json({
+                success: false,
+                message: "You cannot view this blog"
+            });
+        }
+
         const isLiked = blog.likedBy.some(id => id.equals(req.userId))
         return res.status(200).json({ success: true, blog: blog, isLiked })
     } catch (err) {
         console.log("Error:", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        })
+        return res.status(500).json({success: false,message: "Internal Server Error"})
     }
 }
 
@@ -216,9 +256,28 @@ export const getBlogsByCategory = async (req, res) => {
         return res.status(400).json({ success: false, message: "Missing required details" })
     }
     try {
-        const blogs = await Blog.find({ category }).sort({ createdAt: -1 }).populate("author", "name email profileImg")
-        if (!blogs || blogs.length === 0) return res.status(404).json({ success: false, message: "No blogs found for this category" })
-        return res.status(200).json({ success: true, blogs, message: `Blogs for category ${category} fetched successfully` })
+
+        const filter = {
+            category,
+            status: "published",
+            visibility: "public"
+        }
+
+        const page = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || 15
+
+        const skip = (page - 1) * limit
+
+        const totalBlogs = await Blog.countDocuments(filter)
+
+        const blogs = await Blog.find(filter).sort({ createdAt: -1 }).populate("author", "name email profileImg").skip(skip).limit(limit)
+
+        if (blogs.length === 0) {
+            return res.status(404).json({ success: false, message: "No blogs found for this category" })
+        }
+
+
+        return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit), message: `Blogs for category ${category} fetched successfully` })
     } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({
@@ -260,7 +319,7 @@ export const incrementViews = async (req, res) => {
             return res.status(400).json({ success: false, message: "Blog not found" })
         }
         blog.views++;
-        blog.trendinScore = calculateTrendingScore(blog)
+        blog.trendingScore = calculateTrendingScore(blog)
         await blog.save()
         return res.status(200).json({ success: true })
     } catch (err) {
@@ -273,7 +332,7 @@ export const toggleLike = async (req, res) => {
     try {
         const { blogId } = req.params
         const userId = req.userId
-        if( !blogId || !userId) {
+        if (!blogId || !userId) {
             return res.status(400).json({ success: false, message: "Missing required details" })
         }
         const blog = await Blog.findById(blogId)
@@ -296,7 +355,7 @@ export const toggleLike = async (req, res) => {
         blog.trendingScore = calculateTrendingScore(blog)
         await blog.save()
 
-        return res.status(200).json({ success: true, message: alreadyLiked ? "Like removed successfully" : "Blog Liked successfully", likes: blog.likes, isLiked})
+        return res.status(200).json({ success: true, message: alreadyLiked ? "Like removed successfully" : "Blog Liked successfully", likes: blog.likes, isLiked })
 
     } catch (err) {
         console.log("Error:", err);
@@ -308,6 +367,11 @@ export const toggleLike = async (req, res) => {
 export const getPublishedByTimeBlogs = async (req, res) => {
     try {
         const { range } = req.query
+
+        const page = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || 15
+
+        const skip = (page - 1) * limit
 
         let filter = {
             status: "published",
@@ -327,9 +391,11 @@ export const getPublishedByTimeBlogs = async (req, res) => {
             filter.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
         }
 
-        const blogs = await Blog.find(filter).sort({ createdAt: -1 }).populate("author", "name email profileImg")
+        const totalBlogs = await Blog.countDocuments(filter)
 
-        return res.status(200).json({ success: true, blogs })
+        const blogs = await Blog.find(filter).sort({ createdAt: -1 }).populate("author", "name email profileImg").skip(skip).limit(limit)
+
+        return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
 
     } catch (err) {
         console.log("Error:", err);
@@ -341,13 +407,17 @@ export const getTrendingBlogs = async (req, res) => {
     try {
         const { range } = req.query
 
+        const page = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || 15
+
+        const skip = (page - 1) * limit
+
         let filter = {
             status: "published",
             visibility: "public",
             trendingScore: { $gt: 0 }
         }
         const now = Date.now()
-        const cutoff = new Date(now - 24 * 60 * 60 * 1000);
 
 
         if (range === "24h") {
@@ -359,8 +429,12 @@ export const getTrendingBlogs = async (req, res) => {
         if (range === "month") {
             filter.publishedAt = { $gte: new Date(now - 30 * 24 * 60 * 60 * 1000) }
         }
-        const blogs = await Blog.find(filter).sort({ trendingScore: -1 }).populate("author", "name email profileImg")
-        return res.status(200).json({ success: true, blogs })
+
+        const totalBlogs = await Blog.countDocuments(filter)
+
+        const blogs = await Blog.find(filter).sort({ trendingScore: -1 }).populate("author", "name email profileImg").skip(skip).limit(limit)
+
+        return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
     } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({

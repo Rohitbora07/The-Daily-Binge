@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { ArrowUp } from "lucide-react";
-import { GET_ALL_BLOGS } from "../../constants/route";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "motion/react";import { GET_ALL_BLOGS } from "../../constants/route";
 import api from "../../api/axios";
 import BlogGrid from "../../components/BlogGrid";
 import BlogSidebar from "../../components/blog/BlogSidebar";
+import Pagination from "../../components/Pagination"
 
 
 
@@ -12,31 +11,47 @@ export default function Latest() {
     const [period, setPeriod] = useState("Today");
     const [activeCat, setActiveCat] = useState(null);
     const [activeTag, setActiveTag] = useState(null);
-    const [showTop, setShowTop] = useState(false);
-    const [last24hrBlogs, setLast24hrBlogs] = useState(null)
-    const [lastWeekBlogs, setLastWeekBlogs] = useState(null)
-    const [lastMonthBlogs, setLastMonthBlogs] = useState(null)
+    const [last24hrBlogs, setLast24hrBlogs] = useState([])
+    const [lastWeekBlogs, setLastWeekBlogs] = useState([])
+    const [yesterdayBlogs, setyesterdayBlogs] = useState([])
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1);
+    const [yesterdayPage, setYesterdayPage] = useState(1)
+    const [totalYesterdayPages, setTotalYesterdayPages] = useState(1)
+    const [weeklyPage, setweeklyPage] = useState(1)
+    const [totalWeeklyPage, setTotalWeeklyPage] = useState(1)
+
+
+    const contentRef = useRef(null)
 
     useEffect(() => {
         const getAll = async () => {
             try {
-                const { data } = await api.get(`${GET_ALL_BLOGS}?range=24h`)
+                const { data } = await api.get(`${GET_ALL_BLOGS}?range=24h&page=${page}&limit=9`)
                 console.log("Today's data", data)
+                
                 setLast24hrBlogs(data.blogs || [])
-                const { data: weekData } = await api.get(`${GET_ALL_BLOGS}?range=yesterday`)
-                console.log("Yesterday's data", weekData)
+                const { data: weekData } = await api.get(`${GET_ALL_BLOGS}?range=week&page=${weeklyPage}&limit=9`)
+                
                 setLastWeekBlogs(weekData.blogs || [])
-                const { data: monthData } = await api.get(`${GET_ALL_BLOGS}?range=week`)
-                console.log("This week's data", monthData)
-                setLastMonthBlogs(monthData.blogs || [])
+                const { data: yesterday } = await api.get(`${GET_ALL_BLOGS}?range=yesterday&page=${yesterdayPage}&limit=9`)
+                setyesterdayBlogs(yesterday.blogs || [])
+                
+                setTotalPages(data.totalPages)
+                setTotalYesterdayPages(yesterday.totalPages)
+                setTotalWeeklyPage(weekData.totalPages)
             } catch (error) {
                 console.log(error)
             }
         }
         getAll()
-    }, [])
+    }, [page, yesterdayPage, weeklyPage])
 
-    const currentBlogs = period === "Today" ? last24hrBlogs : period === "Yesterday" ? lastWeekBlogs : lastMonthBlogs
+    const currentBlogs = period === "Today" ? last24hrBlogs : period === "Yesterday" ? yesterdayBlogs : lastWeekBlogs
+    const currentPage = period === "Today" ? page : period === "Yesterday" ? yesterdayPage : weeklyPage
+    const currentTotalPages = period === "Today" ? totalPages : period === "Yesterday" ? totalYesterdayPages : totalWeeklyPage
+
+
 
     const tags = currentBlogs ? [...new Set(currentBlogs.map(blog => blog.tags).flat())].slice(0, 20) : []
     const latestAuthors = currentBlogs ? [... new Map(currentBlogs.map(blog => [blog.author._id, blog.author])).values()] : []
@@ -51,15 +66,19 @@ export default function Latest() {
 
 
 
-    useEffect(() => {
-        const onScroll = () => setShowTop(window.scrollY > 400);
-        window.addEventListener("scroll", onScroll, { passive: true });
-        return () => window.removeEventListener("scroll", onScroll);
-    }, []);
+    const handlePageChange = (newPage) => {
+        if(period === "Today") setPage(newPage)
+        else if( period === "Yesterday" ) setYesterdayPage(newPage)
+        else setweeklyPage(newPage)
+        if (contentRef.current) {
+            contentRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }
 
 
 
-    if (!last24hrBlogs || !lastWeekBlogs || !lastMonthBlogs) {
+
+    if (!last24hrBlogs || !lastWeekBlogs || !yesterdayBlogs) {
         return (
             <div className="min-h-screen bg-stone-50 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0077CC]"></div>
@@ -119,6 +138,10 @@ export default function Latest() {
                     ) : (
                         <div className="text-center py-12 text-stone-400">No stories found matching the active criteria.</div>
                     )}
+                    <Pagination currentPage={currentPage}
+                        totalPages={currentTotalPages}
+                        onPageChange={handlePageChange}
+                    />
 
                 </div>
 
@@ -127,13 +150,7 @@ export default function Latest() {
                 </div>
             </div>
 
-            <AnimatePresence>
-                {showTop && (
-                    <motion.button initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="fixed bottom-6 right-6 w-10 h-10 bg-white border border-stone-200 shadow-md rounded-xl flex items-center justify-center text-stone-500 hover:text-[#0077CC] z-50">
-                        <ArrowUp size={16} />
-                    </motion.button>
-                )}
-            </AnimatePresence>
+
         </motion.div>
     );
 }

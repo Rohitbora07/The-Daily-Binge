@@ -1,31 +1,14 @@
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
+import api from "../../api/axios"
+import { ADMIN_STATS_ROUTE, ADMIN_ALL_BLOGS_ROUTE,ADMIN_ALL_USERS_ROUTE } from "../../constants/route";
 import {
     Users, FileText, Eye, MessageSquare,
     ArrowRight, FilePlus, Star,
-    UserMinus, FileMinus
+    UserMinus, FileMinus, Bookmark
 } from "lucide-react";
 import AdminStatsCard from "../../components/admin/AdminStatsCard";
-
-const stats = [
-    { icon: Users, label: "Total users", value: "8,420", change: 6, color: "#0077CC" },
-    { icon: FileText, label: "Total posts", value: "2,148", change: 9, color: "#7c3aed" },
-    { icon: Eye, label: "Total views", value: "1.2M", change: 14, color: "#059669" },
-    { icon: MessageSquare, label: "Comments", value: "9,304", change: -2, color: "#d97706" },
-];
-
-const recentUsers = [
-    { name: "James Okafor", email: "james@mail.com", role: "Writer", joined: "2h ago", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face" },
-    { name: "Priya Nair", email: "priya@mail.com", role: "Reader", joined: "5h ago", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face" },
-    { name: "Tom Brennan", email: "tom@mail.com", role: "Writer", joined: "1d ago", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face" },
-    { name: "Alex Morgan", email: "alex@mail.com", role: "Admin", joined: "2d ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" },
-];
-
-const recentBlogs = [
-    { title: "Why TypeScript Is No Longer Optional", author: "Sarah Chen", status: "Published", date: "Jun 18" },
-    { title: "Building with Vite in 2025", author: "James Okafor", status: "Published", date: "Jun 10" },
-    { title: "A Beginner's Guide to Motion Design", author: "Alex Morgan", status: "Pending", date: "Jun 26" },
-    { title: "State Management in 2025", author: "Tom Brennan", status: "Draft", date: "Jun 25" },
-];
+import { useNavigate } from "react-router-dom";
 
 const statusStyles = {
     Published: "bg-emerald-50 text-emerald-600 border-emerald-100",
@@ -41,6 +24,68 @@ const quickActions = [
 ];
 
 export default function AdminDashboard() {
+    
+    const [totalUsers, setTotalUsers] = useState(0)
+    const [totalComments, setTotalComments] = useState(0)
+    const [totalBookmarks, setTotalBookmarks] = useState(0)
+    const [totalBlogs, setTotalBlogs] = useState(0)
+    const [totalPublishedBlogs, setTotalPublishedBlogs] = useState(0)
+    const [totalDraftBlogs, setTotalDraftBlogs] = useState(0)
+    const [totalFeaturedBlogs, setTotalFeaturedBlogs] = useState(0)
+    const [loading, setLoading] = useState(true)
+    const [allBlogs, setAllBlogs] = useState([])
+
+    const [allUsers, setAllUsers] = useState([])
+
+    const navigate = useNavigate()
+
+    const stats = [
+        { icon: Users, label: "Total users", value: totalUsers, change: 6, color: "#0077CC" },
+        { icon: FileText, label: "Total posts", value: totalBlogs, change: 9, color: "#7c3aed" },
+        {icon: Bookmark, label: "Total bookmarks", value: totalBookmarks, change: 14, color: "#059669" },
+        { icon: Eye, label: "Total views", value: totalPublishedBlogs, change: 14, color: "#059669" },
+        { icon: FileText, label: "Draft posts", value: totalDraftBlogs, change: 14, color: "#059669" },
+        { icon: Star, label: "Featured posts", value: totalFeaturedBlogs, change: 14, color: "#059669" },
+        { icon: MessageSquare, label: "Comments", value: totalComments, change: -2, color: "#d97706" },
+    ]
+    
+    useEffect(()=>{
+        const getAdminStats = async () => {
+            try {
+                setLoading(true)
+                const {data} = await api.get(ADMIN_STATS_ROUTE)
+                console.log(data)
+                setTotalUsers(data.users)
+                setTotalComments(data.comments)
+                setTotalBookmarks(data.bookmarks)
+                setTotalBlogs(data.totalBlogs)
+                setTotalPublishedBlogs(data.published)
+                setTotalDraftBlogs(data.drafts)
+                setTotalFeaturedBlogs(data.featured)
+
+                const {data: all} = await api.get(`${ADMIN_ALL_BLOGS_ROUTE}?limit=5`)
+                setAllBlogs(all.blogs || [])
+                console.log(all)
+
+                const {data: users} = await api.get(`${ADMIN_ALL_USERS_ROUTE}?limit=5`)
+                setAllUsers(users.users || [])
+                console.log(users)
+
+            } catch (error) {
+                console.log(error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        getAdminStats()
+    },[])
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-stone-50/60 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-stone-200 border-t-[#0077CC]"></div>
+            </div>
+        );
+    }
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -109,19 +154,20 @@ export default function AdminDashboard() {
                     >
                         <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-stone-100">
                             <h2 className="text-sm font-semibold text-stone-800">Recent posts</h2>
-                            <button className="flex items-center gap-1 text-xs text-[#0077CC] hover:text-[#005FA3] font-medium transition-colors">
+                            <button onClick={() => navigate("/admin/blogs")}
+                            className="flex items-center gap-1 text-xs text-[#0077CC] hover:text-[#005FA3] font-medium transition-colors">
                                 View all <ArrowRight size={11} />
                             </button>
                         </div>
                         <ul className="divide-y divide-stone-100">
-                            {recentBlogs.map((blog) => (
+                            {allBlogs.map((blog) => (
                                 <li key={blog.title} className="flex items-center gap-3 px-4 sm:px-5 py-3.5">
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-stone-800 truncate">
                                             {blog.title}
                                         </p>
                                         <p className="text-xs text-stone-400 mt-0.5 truncate">
-                                            {blog.author} · {blog.date}
+                                            {blog.author.name} · {blog.publishedAt ? new Date(blog.publishedAt).toLocaleDateString() : "Not published"}
                                         </p>
                                     </div>
                                     <span
@@ -148,10 +194,10 @@ export default function AdminDashboard() {
                             </button>
                         </div>
                         <ul className="divide-y divide-stone-100">
-                            {recentUsers.map((user) => (
+                            {allUsers.map((user) => (
                                 <li key={user.email} className="flex items-center gap-3 px-4 sm:px-5 py-3.5">
                                     <img
-                                        src={user.avatar}
+                                        src={user.profileImg}
                                         alt={user.name}
                                         className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                                     />
@@ -165,7 +211,7 @@ export default function AdminDashboard() {
                                         <span className="text-[10px] font-semibold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-md block mb-1">
                                             {user.role}
                                         </span>
-                                        <span className="text-[10px] text-stone-300">{user.joined}</span>
+                                        <span className="text-[10px] text-stone-300">{user.createdAt && new Date(user.createdAt).toLocaleDateString()}</span>
                                     </div>
                                 </li>
                             ))}

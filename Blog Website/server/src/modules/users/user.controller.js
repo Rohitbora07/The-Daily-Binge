@@ -370,8 +370,8 @@ export const updateUserProfile = async (req, res) => {
         user.profileImg = profileImg || user.profileImg
         user.location = location || user.location
         // user.backgroundImg = backgroundImg || user.backgroundImg
-        if(uploadImg) user.profileImg = uploadImg.secure_url
-        if(uploadBackgroundImg) user.backgroundImg = uploadBackgroundImg.secure_url
+        if (uploadImg) user.profileImg = uploadImg.secure_url
+        if (uploadBackgroundImg) user.backgroundImg = uploadBackgroundImg.secure_url
 
         await user.save()
         return res.status(200).json({ success: true, message: "Profile updated successfully", user })
@@ -385,10 +385,16 @@ export const updateUserProfile = async (req, res) => {
 }
 
 export const getUserProfile = async (req, res) => {
+    const userId = req.userId
     try {
-        const { userId } = req.params;
+        const { id } = req.params;
 
-        const user = await User.findById(userId)
+        const page = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || 15
+
+        const skip = (page - 1) * limit
+
+        const user = await User.findById(id)
             .select("-password -VerificationOtp -emailOtpExpiry -passResetOtp -passResetOtpExpiry");
 
         if (!user) {
@@ -398,19 +404,24 @@ export const getUserProfile = async (req, res) => {
             });
         }
 
-        const blogs = await Blog.find({
-            author: userId,
-            status: "published",
-            visibility: "public"
-        })
-        .select("title slug coverImage views likes commentsCount createdAt category tags")
-        .populate("author", "name profileImg")
-        .sort({ createdAt: -1 });
+        const filter = { author: id };
+
+        if (userId.toString()  !== id) {
+            filter.status = "published";
+            filter.visibility = "public";
+        }
+
+        const blogs = await Blog.find(filter)
+            .select("title slug coverImage views likes commentsCount createdAt category tags")
+            .populate("author", "name profileImg")
+            .sort({ createdAt: -1 }).skip(skip).limit(limit)
+
+        const totalBlogs = await Blog.countDocuments(filter)
 
         return res.status(200).json({
             success: true,
             user,
-            blogs
+            blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit)
         });
 
     } catch (error) {
