@@ -4,8 +4,11 @@ import { Link } from "react-router-dom";
 import AdminBlogStripeItem from "../AdminBlogStripeItem";
 import SearchBar from "../../../components/SearchBar";
 import api from "../../../api/axios";
-import { GET_ALL_BLOGS } from "../../../constants/route";
+import { GET_ALL_BLOGS, ADMIN_DELETE_MULTIPLE_BLOGS } from "../../../constants/route";
 import Pagination from "../../../components/Pagination";
+import { AnimatePresence } from "motion/react"
+import DeleteModal from "../../../components/general/DeleteModal";
+
 
 export default function LatestBlogs() {
     const [searchTerm, setSearchTerm] = useState("");
@@ -23,6 +26,9 @@ export default function LatestBlogs() {
     const [totalYesterdayPages, setTotalYesterdayPages] = useState(1)
     const [weeklyPage, setweeklyPage] = useState(1)
     const [totalWeeklyPage, setTotalWeeklyPage] = useState(1)
+
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const contentRef = useRef(null)
 
@@ -58,7 +64,6 @@ export default function LatestBlogs() {
     const filteredBlogs = (rawActiveBlogs || []).filter(b => {
         if (!b) return false;
         const searchLower = searchTerm.toLowerCase();
-        // Adjust these fields based on your actual API response structure
         const titleMatch = b.title?.toLowerCase().includes(searchLower);
         const authorMatch = b.author?.name?.toLowerCase().includes(searchLower) ||
             b.author?.toLowerCase?.().includes(searchLower);
@@ -79,13 +84,11 @@ export default function LatestBlogs() {
         setPeriod(newPeriod);
         setSelectedIds([]); // Clear selection when changing tabs
     };
-
-    // Selection Handlers (Now tied to filteredBlogs so hidden items aren't selected)
     const handleSelectAll = () => {
         if (selectedIds.length === filteredBlogs.length && filteredBlogs.length > 0) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(filteredBlogs.map(b => b.id));
+            setSelectedIds(filteredBlogs.map(b => b._id));
         }
     };
 
@@ -93,27 +96,26 @@ export default function LatestBlogs() {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
     };
 
-    // Deletion Actions
-    const handleDelete = (id) => {
-        if (confirm("Permanently remove this blog from trending?")) {
-            const filterOut = (list) => list.filter(b => b.id !== id);
-            setlatestBlogs(filterOut);
-            setyesterdayBlogs(filterOut);
-            setweekBlogs(filterOut);
-            setSelectedIds(prev => prev.filter(item => item !== id));
-            // Add your API delete call here later
-        }
-    };
 
-    const handleBulkDelete = () => {
-        if (confirm(`Are you sure you want to remove the ${selectedIds.length} selected items?`)) {
-            const filterOutBulk = (list) => list.filter(b => !selectedIds.includes(b.id));
-            setlatestBlogs(filterOutBulk);
-            setyesterdayBlogs(filterOutBulk);
-            setweekBlogs(filterOutBulk);
-            setSelectedIds([]);
-            // Add your API bulk delete call here later
+
+    const handleBulkDelete = async () => {
+        const filterOutBulk = (list) => list.filter(b => !selectedIds.includes(b._id));
+        try {
+            setDeleteLoading(true)
+            const { data } = await api.post(ADMIN_DELETE_MULTIPLE_BLOGS,
+                { blogIds: selectedIds }
+            )
+            setShowDeleteModal(false);
+            console.log(data)
+        } catch (error) {
+            console.log(error.response.data.message)
+        } finally {
+            setDeleteLoading(false)
         }
+        setlatestBlogs(filterOutBulk);
+        setyesterdayBlogs(filterOutBulk);
+        setweekBlogs(filterOutBulk);
+        setSelectedIds([]);
     };
 
     if (loading) {
@@ -181,7 +183,7 @@ export default function LatestBlogs() {
 
                         {selectedIds.length > 0 && (
                             <button
-                                onClick={handleBulkDelete}
+                                onClick={() => setShowDeleteModal(true)}
                                 className="flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100/80 px-3 py-1.5 rounded-xl border border-red-200/40 transition-colors"
                             >
                                 <Trash2 size={13} /> Delete Selected ({selectedIds.length})
@@ -195,12 +197,11 @@ export default function LatestBlogs() {
                     {filteredBlogs.length > 0 ? (
                         filteredBlogs.map((blog, idx) => (
                             <AdminBlogStripeItem
-                                key={blog.id || idx}
+                                key={blog._id || idx}
                                 blog={blog}
                                 index={idx}
-                                isSelected={selectedIds.includes(blog.id)}
-                                onSelect={() => handleSelectOne(blog.id)}
-                                onDelete={() => handleDelete(blog.id)}
+                                isSelected={selectedIds.includes(blog._id)}
+                                onSelect={() => handleSelectOne(blog._id)}
                             />
                         ))
                     ) : (
@@ -216,6 +217,11 @@ export default function LatestBlogs() {
                     onPageChange={handlePageChange}
                 />
             </div>
+            <AnimatePresence>
+                {showDeleteModal && (
+                    <DeleteModal setShowDeleteModal={setShowDeleteModal} handleDelete={handleBulkDelete} deleteLoading={deleteLoading} />
+                )}
+            </AnimatePresence>
         </div>
     );
 }

@@ -4,7 +4,9 @@ import { Link } from "react-router-dom";
 import AdminBlogStripeItem from "../AdminBlogStripeItem";
 import SearchBar from "../../../components/SearchBar";
 import api from "../../../api/axios";
-import { TRENDING_BLOGS } from "../../../constants/route";
+import { TRENDING_BLOGS, ADMIN_DELETE_MULTIPLE_BLOGS } from "../../../constants/route";
+import { AnimatePresence } from "motion/react"
+import DeleteModal from "../../../components/general/DeleteModal";
 
 export default function TrendingBlogs() {
     const [searchTerm, setSearchTerm] = useState("");
@@ -14,7 +16,10 @@ export default function TrendingBlogs() {
     const [todayTrendingBlogs, setTodayTrendingBlogs] = useState([]);
     const [weeklyTrendingBlogs, setWeeklyTrendingBlogs] = useState([]);
     const [monthlyTrendingBlogs, setMonthlyTrendingBlogs] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true)
+
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     useEffect(() => {
         const getTrendingBlogs = async () => {
@@ -25,7 +30,7 @@ export default function TrendingBlogs() {
                     api.get(`${TRENDING_BLOGS}?range=week`),
                     api.get(`${TRENDING_BLOGS}?range=month`)
                 ]);
-                
+
                 setTodayTrendingBlogs(dayRes.data?.blogs || []);
                 setWeeklyTrendingBlogs(weekRes.data?.blogs || []);
                 setMonthlyTrendingBlogs(monthRes.data?.blogs || []);
@@ -38,35 +43,31 @@ export default function TrendingBlogs() {
         getTrendingBlogs();
     }, []);
 
-    // 1. Determine which list we are currently looking at based on the active tab
-    const rawActiveBlogs = 
-        period === "Today" ? todayTrendingBlogs : 
-        period === "This Week" ? weeklyTrendingBlogs : 
-        monthlyTrendingBlogs;
+    const rawActiveBlogs =
+        period === "Today" ? todayTrendingBlogs :
+            period === "This Week" ? weeklyTrendingBlogs :
+                monthlyTrendingBlogs;
 
-    // 2. Apply search text filtering to that specific list
     const filteredBlogs = (rawActiveBlogs || []).filter(b => {
         if (!b) return false;
         const searchLower = searchTerm.toLowerCase();
-        // Adjust these fields based on your actual API response structure
         const titleMatch = b.title?.toLowerCase().includes(searchLower);
-        const authorMatch = b.author?.name?.toLowerCase().includes(searchLower) || 
-                            b.author?.toLowerCase?.().includes(searchLower);
+        const authorMatch = b.author?.name?.toLowerCase().includes(searchLower) ||
+            b.author?.toLowerCase?.().includes(searchLower);
         return titleMatch || authorMatch;
     });
 
-    // Handle tab switching
     const handlePeriodChange = (newPeriod) => {
         setPeriod(newPeriod);
         setSelectedIds([]); // Clear selection when changing tabs
     };
 
-    // Selection Handlers (Now tied to filteredBlogs so hidden items aren't selected)
+
     const handleSelectAll = () => {
         if (selectedIds.length === filteredBlogs.length && filteredBlogs.length > 0) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(filteredBlogs.map(b => b.id));
+            setSelectedIds(filteredBlogs.map(b => b._id));
         }
     };
 
@@ -74,27 +75,26 @@ export default function TrendingBlogs() {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
     };
 
-    // Deletion Actions
-    const handleDelete = (id) => {
-        if (confirm("Permanently remove this blog from trending?")) {
-            const filterOut = (list) => list.filter(b => b.id !== id);
-            setTodayTrendingBlogs(filterOut);
-            setWeeklyTrendingBlogs(filterOut);
-            setMonthlyTrendingBlogs(filterOut);
-            setSelectedIds(prev => prev.filter(item => item !== id));
-            // Add your API delete call here later
-        }
-    };
 
-    const handleBulkDelete = () => {
-        if (confirm(`Are you sure you want to remove the ${selectedIds.length} selected items?`)) {
-            const filterOutBulk = (list) => list.filter(b => !selectedIds.includes(b.id));
-            setTodayTrendingBlogs(filterOutBulk);
-            setWeeklyTrendingBlogs(filterOutBulk);
-            setMonthlyTrendingBlogs(filterOutBulk);
-            setSelectedIds([]);
-            // Add your API bulk delete call here later
+
+    const handleBulkDelete = async () => {
+        const filterOutBulk = (list) => list.filter(b => !selectedIds.includes(b._id));
+        try {
+            setDeleteLoading(true)
+            const { data } = await api.post(ADMIN_DELETE_MULTIPLE_BLOGS,
+                {blogIds: selectedIds}
+            )
+            setShowDeleteModal(false);
+            console.log(data)
+        } catch (error) {
+            console.log(error.response.data.message)
+        }finally{
+            setDeleteLoading(false)
         }
+        setTodayTrendingBlogs(filterOutBulk);
+        setWeeklyTrendingBlogs(filterOutBulk);
+        setMonthlyTrendingBlogs(filterOutBulk);
+        setSelectedIds([]);
     };
 
     if (loading) {
@@ -134,11 +134,10 @@ export default function TrendingBlogs() {
                             <button
                                 key={t}
                                 onClick={() => handlePeriodChange(t)}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                                    period === t 
-                                        ? "bg-white text-stone-900 shadow-sm font-semibold" 
-                                        : "text-stone-500 hover:text-stone-800"
-                                }`}
+                                className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${period === t
+                                    ? "bg-white text-stone-900 shadow-sm font-semibold"
+                                    : "text-stone-500 hover:text-stone-800"
+                                    }`}
                             >
                                 {t}
                             </button>
@@ -163,7 +162,7 @@ export default function TrendingBlogs() {
 
                         {selectedIds.length > 0 && (
                             <button
-                                onClick={handleBulkDelete}
+                                onClick={() => setShowDeleteModal(true)}
                                 className="flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100/80 px-3 py-1.5 rounded-xl border border-red-200/40 transition-colors"
                             >
                                 <Trash2 size={13} /> Delete Selected ({selectedIds.length})
@@ -177,23 +176,28 @@ export default function TrendingBlogs() {
                     {filteredBlogs.length > 0 ? (
                         filteredBlogs.map((blog, idx) => (
                             <AdminBlogStripeItem
-                                key={blog.id || idx}
+                                key={blog._id || idx}
                                 blog={blog}
                                 index={idx}
-                                isSelected={selectedIds.includes(blog.id)}
-                                onSelect={() => handleSelectOne(blog.id)}
-                                onDelete={() => handleDelete(blog.id)}
+                                isSelected={selectedIds.includes(blog._id)}
+                                onSelect={() => handleSelectOne(blog._id)}
+                            // onDelete={() => handleDelete(blog._id)}
                             />
                         ))
                     ) : (
                         <div className="text-center py-16 bg-white rounded-2xl border border-stone-200/50 shadow-sm text-xs font-medium text-stone-400">
-                            {searchTerm 
-                                ? "No trending articles match your search." 
+                            {searchTerm
+                                ? "No trending articles match your search."
                                 : `No trending articles found for ${period}.`}
                         </div>
                     )}
                 </div>
             </div>
+            <AnimatePresence>
+                {showDeleteModal && (
+                    <DeleteModal setShowDeleteModal={setShowDeleteModal} handleDelete={handleBulkDelete} deleteLoading={deleteLoading} />
+                )}
+            </AnimatePresence>
         </div>
     );
 }

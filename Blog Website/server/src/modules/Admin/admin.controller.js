@@ -20,13 +20,37 @@ export const featureBlog = async (req, res) => {
 
         await blog.save()
 
-        return res.status(200).json({ success: true, message: blog.isFeatured ? "Blog featured successfully" : "Blog removed from featured" })
+        return res.status(200).json({ success: true, isFeatured: blog.isFeatured, message: blog.isFeatured ? "Blog featured successfully" : "Blog removed from featured" })
 
     } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({ success: false, message: "Internal Server Error" })
     }
 }
+
+export const toggleComments = async (req, res) => {
+    const { id } = req.params
+    if (!id) {
+        return res.status(400).json({ success: false, message: "Missing Blog Id" })
+    }
+    try {
+        const blog = await Blog.findById(id)
+        if (!blog) {
+            return res.status(400).json({ success: false, message: "Blog not found" })
+        }
+
+        blog.allowComments = !blog.allowComments;
+
+        await blog.save()
+
+        return res.status(200).json({ success: true, allowComments: blog.allowComments, message: blog.allowComments ? "Comment enabled successfully" : "Comment disabled successfully" })
+
+    } catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
+    }
+}
+
 
 export const deleteOneBlog = async (req, res) => {
     const { id } = req.params
@@ -56,6 +80,7 @@ export const deleteOneBlog = async (req, res) => {
 }
 
 export const deleteManyBlog = async (req, res) => {
+    console.log(req.body)
     const { blogIds } = req.body
     if (!blogIds || !blogIds.length) {
         return res.status(400).json({ success: false, message: "No blogs selected" })
@@ -99,8 +124,6 @@ export const deleteManyBlog = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error" })
     }
 }
-
-
 
 export const adminStats = async (req, res) => {
     try {
@@ -245,7 +268,7 @@ export const publishBlog = async (req, res) => {
         }
 
         if (blog.status === "published") {
-            return res.status(400).json({success: false,message: "Blog is already published"});
+            return res.status(400).json({ success: false, message: "Blog is already published" });
         }
 
         blog.status = "published";
@@ -276,7 +299,7 @@ export const unPublishBlog = async (req, res) => {
         }
 
         if (blog.status === "draft") {
-            return res.status(400).json({success: false,message: "Blog is already drafted"});
+            return res.status(400).json({ success: false, message: "Blog is already drafted" });
         }
 
         blog.status = "draft";
@@ -302,13 +325,186 @@ export const getAllUsers = async (req, res) => {
         const limit = Number(req.query.limit) || 15
         const skip = (page - 1) * limit
 
-        const totalUsers = await User.countDocuments()
+        const {search, status, isEmailVerified} = req.query
 
+        const filter = {
+            role: { $ne: "admin" },
+        }
 
-        const users = await User.find({
-            role: { $ne: "admin" }
-        }).select("-password").sort({ createdAt: -1 }).skip(skip).limit(limit)
+        if(search){
+            filter.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { email: { $regex: search, $options: "i" } }
+            ]
+        }
+
+        if(status){
+            filter.status = status
+        }
+        if(isEmailVerified !== undefined){
+            filter.isEmailVerified = isEmailVerified === "true"
+        }
+
+        const totalUsers = await User.countDocuments(filter)
+        
+        const users = await User.find(filter).select("-password -VerificationOtp -emailOtpExpiry -passResetOtp -passResetOtpExpiry").sort({ createdAt: -1 }).skip(skip).limit(limit)
         return res.status(200).json({ success: true, users, totalUsers, currentPage: page, totalPages: Math.ceil(totalUsers / limit) })
+    } catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
+    }
+}
+
+export const deleteOneUser = async (req, res) => {
+    const { id } = req.params
+    if (!id) {
+        return res.status(400).json({ success: false, message: "Missing User Id" })
+    }
+    try {
+        const user = await User.findById(id)
+        if (!user) {
+            return res.status(400).json({ success: false, message: "User not found" })
+        }
+        if (user.profileImg) {
+            await cloudinary.uploader.destroy(user.profileImg);
+        }
+        await user.deleteOne();
+        await Blog.deleteMany({ author: id });
+        await Comment.deleteMany({ user: id });
+
+        await Bookmark.deleteMany({ user: id });
+
+        return res.status(200).json({ success: true, message: "User Deleted successfully" })
+    } catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
+    }
+}
+
+export const deleteManyUsers = async (req, res) => {
+    const { userIds } = req.body
+    if (!userIds || !userIds.length) {
+        return res.status(400).json({ success: false, message: "No users selected" })
+    }
+    try {
+        const users = await User.find({
+            _id: {
+                $in: userIds
+            }
+        })
+        if (users.length === 0) {
+            return res.status(400).json({ success: false, message: "Users not found" })
+        }
+
+        for (const user of users) {
+            if (user.profileImg) {
+                await cloudinary.uploader.destroy(user.profileImg);
+            }
+        }
+
+        await Promise.all([
+            User.deleteMany({ _id: { $in: userIds } }),
+            Blog.deleteMany({ author: { $in: userIds } }),
+            Comment.deleteMany({ user: { $in: userIds } }),
+            Bookmark.deleteMany({ user: { $in: userIds } })
+        ]);
+
+        return res.status(200).json({ success: true, message: "Users Deleted successfully" })
+
+    } catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
+    }
+}
+
+export const getUserDetailsById = async (req, res) => {
+    const { id } = req.params
+    if (!id) {
+        return res.status(400).json({ success: false, message: "Missing User Id" })
+    }
+    console.log(id)
+
+    try {
+        const user = await User.findById(id).select("-password -VerificationOtp -emailOtpExpiry -passResetOtp -passResetOtpExpiry")
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "User not found" })
+        }
+
+        const totalBlogs = await Blog.countDocuments({ author: id })
+        const totalBookmarks = await Bookmark.countDocuments({ user: id })
+        const totalComments = await Comment.countDocuments({ user: id })
+        return res.status(200).json({ success: true, user, totalBlogs, totalBookmarks, totalComments })
+    } catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
+    }
+}
+
+export const blockUser = async (req, res) => {
+    const { id } = req.params
+    if (!id) {
+        return res.status(400).json({ success: false, message: "Missing User Id" })
+    }
+    const { restrictionReason } = req.body
+    if (!restrictionReason) {
+        return res.status(400).json({ success: false, message: "Reason required for this action" })
+    }
+    try {
+        const user = await User.findById(id).select("status restrictionReason restrictedAt")
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "User not found" })
+        }
+
+        if (user.status === "blocked") {
+            return res.status(400).json({ success: false, message: "User already blocked" })
+        }
+        user.status = "blocked"
+        user.restrictionReason = restrictionReason
+        user.restrictedAt = new Date()
+
+        await user.save()
+        const details = {
+            restrictionReason: user.restrictionReason,
+            status: user.status,
+            restrictedAt: user.restrictedAt
+        }
+
+        return res.status(200).json({ success: true, details, message: "User Blocked Successfully" })
+
+    } catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
+    }
+}
+
+export const unBlockUser = async (req, res) => {
+    const { id } = req.params
+    if (!id) {
+        return res.status(400).json({ success: false, message: "Missing User Id" })
+    }
+    try {
+        const user = await User.findById(id).select("status restrictionReason restrictedAt")
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "User not found" })
+        }
+
+        if (user.status === "active") {
+            return res.status(400).json({ success: false, message: "User already unblocked" })
+        }
+        user.status = "active"
+        user.restrictionReason = ""
+        user.restrictedAt = null
+
+        await user.save()
+        const details = {
+            status: user.status
+        }
+
+        return res.status(200).json({ success: true, details, message: "User Unblocked Successfully" })
+
     } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({ success: false, message: "Internal Server Error" })

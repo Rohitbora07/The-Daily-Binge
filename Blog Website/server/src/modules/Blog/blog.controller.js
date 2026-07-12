@@ -1,6 +1,7 @@
 import Blog from "./blog.model.js";
 import cloudinary from "../../config/cloudinary.js";
 import slugify from "slugify"
+import Bookmark from "../bookmarks/bookmark.model.js";
 import fs from "fs/promises"
 import { calculateTrendingScore } from "../../utils/calculateTrending.js"
 
@@ -147,6 +148,8 @@ export const getSingleBlog = async (req, res) => {
             return res.status(404).json({ success: false, message: "Blog not found" })
         }
 
+        const totalBookmarks = await Bookmark.countDocuments({ blog: blog._id })
+
         const isOwner = userId && blog.author.toString() !== userId
 
         if (!isOwner && (blog.status !== "published" || blog.visibility !== "public")) {
@@ -157,7 +160,7 @@ export const getSingleBlog = async (req, res) => {
         }
 
         const isLiked = blog.likedBy.some(id => id.equals(req.userId))
-        return res.status(200).json({ success: true, blog: blog, isLiked })
+        return res.status(200).json({ success: true, blog: blog, isLiked, totalBookmarks, message: "Blog fetched successfully" })
     } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({success: false,message: "Internal Server Error"})

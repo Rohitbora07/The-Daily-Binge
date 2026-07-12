@@ -1,11 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import api from "../../api/axios"
-import {  ADMIN_ALL_BLOGS_ROUTE } from "../../constants/route";
+import {  ADMIN_ALL_BLOGS_ROUTE, ADMIN_DELETE_MULTIPLE_BLOGS } from "../../constants/route";
 import { Trash2, FilePlus, ArrowLeft, CheckSquare, Square } from "lucide-react";
 import { Link } from "react-router-dom";
 import AdminBlogStripeItem from "./AdminBlogStripeItem";
 import SearchBar from "../../components/SearchBar";
 import Pagination from "../../components/Pagination";
+import { AnimatePresence } from "motion/react"
+import DeleteModal from "../../components/general/DeleteModal";
+
 
 export default function AdminBlogManager() {
     const [loading, setLoading] = useState(true)
@@ -17,6 +20,9 @@ export default function AdminBlogManager() {
     const [totalPages, setTotalPages] = useState(1);
     const contentRef = useRef(null)
 
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
     const handlePageChange = (newPage) => {
         setPage(newPage);
         if (contentRef.current) {
@@ -24,12 +30,11 @@ export default function AdminBlogManager() {
         }
     }
 
-    // Selection Handlers
     const handleSelectAll = () => {
-        if (selectedIds.length === filteredBlogs.length) {
+        if (selectedIds.length === filteredBlogs.length && filteredBlogs.length > 0) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(filteredBlogs.map(b => b.id));
+            setSelectedIds(filteredBlogs.map(b => b._id));
         }
     };
 
@@ -37,27 +42,24 @@ export default function AdminBlogManager() {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
     };
 
-    // Item Action Triggers
-    const handleDelete = (id) => {
-        if (confirm("Permanently delete this blog article?")) {
-            setAllBlogs(prev => prev.filter(b => b.id !== id));
-            setSelectedIds(prev => prev.filter(item => item !== id));
+
+
+    const handleBulkDelete = async () => {
+        const filterOutBulk = (list) => list.filter(b => !selectedIds.includes(b._id));
+        try {
+            setDeleteLoading(true)
+            const { data } = await api.post(ADMIN_DELETE_MULTIPLE_BLOGS,
+                { blogIds: selectedIds }
+            )
+            setShowDeleteModal(false);
+            console.log(data)
+        } catch (error) {
+            console.log(error.response.data.message)
+        } finally {
+            setDeleteLoading(false)
         }
-    };
-
-    const handleToggleStatus = (id) => {
-        setAllBlogs(prev => prev.map(b => b.id === id ? { ...b, status: b.status === "Published" ? "Draft" : "Published" } : b));
-    };
-
-    const handleToggleFeatured = (id) => {
-        setAllBlogs(prev => prev.map(b => b.id === id ? { ...b, isFeatured: !b.isFeatured } : b));
-    };
-
-    const handleBulkDelete = () => {
-        if (confirm(`Are you sure you want to delete the ${selectedIds.length} selected items?`)) {
-            setAllBlogs(prev => prev.filter(b => !selectedIds.includes(b.id)));
-            setSelectedIds([]);
-        }
+        setAllBlogs(filterOutBulk);
+        setSelectedIds([]);
     };
 
     // Filtering Pipeline
@@ -126,7 +128,7 @@ export default function AdminBlogManager() {
 
                         {selectedIds.length > 0 && (
                             <button 
-                                onClick={handleBulkDelete}
+                                onClick={() => setShowDeleteModal(true)}
                                 className="flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100/80 px-3 py-1.5 rounded-xl border border-red-200/40 transition-colors"
                             >
                                 <Trash2 size={13} /> Delete Selected ({selectedIds.length})
@@ -140,14 +142,11 @@ export default function AdminBlogManager() {
                     {filteredBlogs.length > 0 ? (
                         filteredBlogs.map((blog, idx) => (
                             <AdminBlogStripeItem 
-                                key={blog.id}
+                                key={blog._id}
                                 blog={blog}
                                 index={idx}
-                                isSelected={selectedIds.includes(blog.id)}
-                                onSelect={() => handleSelectOne(blog.id)}
-                                onDelete={() => handleDelete(blog.id)}
-                                onToggleStatus={() => handleToggleStatus(blog.id)}
-                                onToggleFeatured={() => handleToggleFeatured(blog.id)}
+                                isSelected={selectedIds.includes(blog?._id)}
+                                onSelect={() => handleSelectOne(blog?._id)}
                             />
                         ))
                     ) : (
@@ -162,6 +161,11 @@ export default function AdminBlogManager() {
                     onPageChange={handlePageChange} 
                     />
             </div>
+            <AnimatePresence>
+                {showDeleteModal && (
+                    <DeleteModal setShowDeleteModal={setShowDeleteModal} handleDelete={handleBulkDelete} deleteLoading={deleteLoading} />
+                )}
+            </AnimatePresence>
         </div>
     );
 }

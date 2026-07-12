@@ -29,8 +29,17 @@ export const CHECK_USER_BLOG_BOOKMARK = (blogId) => `/bookmark/user/${blogId}`
 // admin routes
 
 export const FEATURE_BLOG_ROUTE = (id) => `/admin/blog/${id}/feature`
+export const ADMIN_TOGGLE_COMMENT_ROUTE = (id) => `/admin/blog/${id}/toggle-comments`
 export const ADMIN_DELETE_ONE_BLOG = (id) => `/admin/blog/${id}/delete`
-export const ADMIN_DELETE_MULTIPLE_BLOGS = `/admin/blog/multi/delete`
+export const ADMIN_DELETE_MULTIPLE_BLOGS = `/admin/blog/delete`
 export const ADMIN_STATS_ROUTE = "/admin/stats"
 export const ADMIN_ALL_BLOGS_ROUTE = "/admin/blog/all"
+export const ADMIN_PUBLISH_BLOG_ROUTE = (id) => `/admin/blog/${id}/publish`
+export const ADMIN_UNPUBLISH_BLOG_ROUTE = (id) => `/admin/blog/${id}/unpublish`
+
 export const ADMIN_ALL_USERS_ROUTE = "/admin/users/all"
+export const ADMIN_DELETE_ONE_USER_ROUTE = (id) => `/admin/users/${id}/delete`
+export const ADMIN_DELETE_MULTIPLE_USERS_ROUTE = "/admin/users/delete"
+export const ADMIN_GET_USER_DETAILS_ROUTE = (id) => `/admin/user/${id}/details`
+export const ADMIN_BLOCK_USER_ROUTE = (id) => `/admin/user/${id}/block`
+export const ADMIN_UNBLOCK_USER_ROUTE = (id) => `/admin/user/${id}/un-block`

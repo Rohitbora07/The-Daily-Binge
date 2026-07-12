@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
-import { Clock3, Heart, Edit2, Trash2, CheckSquare, Square, Star } from "lucide-react";
+import { Clock3, Heart, Edit2, CheckSquare, Square, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function AdminBlogStripeItem({ blog, index, isSelected, onSelect, onDelete, onToggleFeatured }) {
+export default function AdminBlogStripeItem({ blog, index, isSelected, onSelect }) {
     const navigate = useNavigate();
 
     return (
@@ -80,9 +80,7 @@ export default function AdminBlogStripeItem({ blog, index, isSelected, onSelect,
 
                     {/* Integrated Admin Action Panel Drawer (Opacities activate cleanly on modern environments) */}
                     <div className="flex items-center gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white sm:bg-transparent pl-2">
-                        <button 
-                            onClick={onToggleFeatured}
-                            title="Toggle Featured"
+                        <div 
                             className={`p-2 rounded-lg transition-colors border ${
                                 blog.isFeatured 
                                 ? "bg-amber-50/60 border-amber-200 text-amber-500 hover:bg-amber-100/60" 
@@ -90,7 +88,7 @@ export default function AdminBlogStripeItem({ blog, index, isSelected, onSelect,
                             }`}
                         >
                             <Star size={14} fill={blog.isFeatured ? "currentColor" : "transparent"} />
-                        </button>
+                        </div>
 
                         <button 
                             onClick={() => navigate(`/admin/blogs/details/${blog.slug}`)}
@@ -98,14 +96,6 @@ export default function AdminBlogStripeItem({ blog, index, isSelected, onSelect,
                             className="p-2 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors border border-transparent"
                         >
                             <Edit2 size={14} />
-                        </button>
-                        
-                        <button 
-                            onClick={onDelete}
-                            title="Delete"
-                            className="p-2 rounded-lg text-stone-400 hover:bg-red-50 hover:text-red-500 transition-colors border border-transparent"
-                        >
-                            <Trash2 size={14} />
                         </button>
                     </div>
                 </div>

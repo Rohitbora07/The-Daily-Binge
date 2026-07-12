@@ -102,6 +102,19 @@ const userSchema = new mongoose.Schema({
         ref: 'User',
         default: []
     }],
+    status: {
+        type: String,
+        default: "active",
+        enum: ["active", "blocked"]
+    },
+    restrictedAt: {
+        type: Date,
+        default: null
+    },
+    restrictionReason: {
+        type: String,
+        default: ""
+    }
 },{timestamps: true})
 
 const User = mongoose.models.User || mongoose.model("User", userSchema)

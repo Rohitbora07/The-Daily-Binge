@@ -7,6 +7,8 @@ import { welcomeEmailTemplate } from "../../templates/welcomeEmail.js";
 import { verificationOtpTemplate } from "../../templates/verificationOtpTemplate.js";
 import { passwordResetOtpTemplate } from "../../templates/resetPasswordOtpTemplate.js";
 import cloudinary from "../../config/cloudinary.js";
+import Bookmark from "../bookmarks/bookmark.model.js";
+import Comment from "../comments/comment.model.js";
 
 export const userLogin = async (req, res) => {
     const { email, password } = req.body
@@ -415,13 +417,17 @@ export const getUserProfile = async (req, res) => {
             .select("title slug coverImage views likes commentsCount createdAt category tags")
             .populate("author", "name profileImg")
             .sort({ createdAt: -1 }).skip(skip).limit(limit)
+            
 
         const totalBlogs = await Blog.countDocuments(filter)
+        const totalBookmarks = await Bookmark.countDocuments({ user: id })
+        const totalComments = await Comment.countDocuments({ user: id })
 
         return res.status(200).json({
             success: true,
             user,
-            blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit)
+            blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit),
+            totalBookmarks, totalComments
         });
 
     } catch (error) {

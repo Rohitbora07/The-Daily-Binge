@@ -1,38 +1,40 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../../api/axios";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { ADMIN_PUBLISH_BLOG_ROUTE, ADMIN_UNPUBLISH_BLOG_ROUTE, FEATURE_BLOG_ROUTE, GET_SINGLE_BLOG, ADMIN_DELETE_ONE_BLOG, ADMIN_TOGGLE_COMMENT_ROUTE } from "../../../constants/route"
 
-import {
-    ArrowLeft,
-    Trash2,
-    Star,
-    Eye,
-    Heart,
-    MessageSquare,
-    Share2,
-    ExternalLink,
-    AlertTriangle,
-    CheckCircle2,
-    Tag,
-} from "lucide-react";
-import { GET_SINGLE_BLOG } from "../../../constants/route";
+import {ArrowLeft,Trash2,Star,Eye,Heart,MessageSquare,Bookmark,ExternalLink,AlertTriangle,CheckCircle2, CircleDashed,Tag} from "lucide-react";
+
 
 export default function AdminBlogDetails() {
 
     const [blog, setBlog] = useState([])
-    const [currentStatus, setCurrentStatus] = useState(blog.status);
-    const [isFeatured, setIsFeatured] = useState(blog.isFeatured);
+    const [currentStatus, setCurrentStatus] = useState();
+    const [isFeatured, setIsFeatured] = useState();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [allowComments, setAllowComments] = useState(true);
     const [author, setAuthor] = useState([])
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [totalBookmarks, setTotalBookmarks] = useState(0);
+
+
+    const navigate = useNavigate()
 
 
     const { slug } = useParams();
 
-    const handleStatusChange = (newStatus) => {
-        setCurrentStatus(newStatus);
-        onUpdateStatus(blog.id, newStatus);
+    const handleStatusChange = async (newStatus) => {
+        if (!blog?._id) return;
+        const route = newStatus === "published" ? ADMIN_PUBLISH_BLOG_ROUTE(blog?._id) : ADMIN_UNPUBLISH_BLOG_ROUTE(blog?._id);
+
+        try {
+            const { data } = await api.patch(route)
+            console.log(data)
+            setCurrentStatus(data.blog.status)
+        } catch (error) {
+            console.log(error.response.data.message)
+        }
     };
 
     useEffect(() => {
@@ -41,18 +43,52 @@ export default function AdminBlogDetails() {
                 const { data } = await api.get(GET_SINGLE_BLOG(slug))
                 console.log(data)
                 setBlog(data.blog || [])
+                setCurrentStatus(data.blog.status)
+                setIsFeatured(data.blog.isFeatured)
+                setAllowComments(data.blog.allowComments)
                 setAuthor(data.blog.author || [])
-                // 
+                setTotalBookmarks(data.totalBookmarks)
             } catch (error) {
                 console.log(error.response.data.message)
             }
         }
         getSingleBlog()
     }, [slug])
-    const handleFeaturedToggle = () => {
-        setIsFeatured(!isFeatured);
-        // onToggleFeatured(blog.id, !isFeatured);
-    };
+
+    const handleToggleFeatured = async () => {
+        if (!blog?._id) return;
+        try {
+            const { data } = await api.patch(FEATURE_BLOG_ROUTE(blog?._id))
+            setIsFeatured(data.isFeatured)
+            console.log(data)
+        } catch (error) {
+            console.log(error.response.data.message)
+        }
+    }
+
+    const handleDelete = async () => {
+        try {
+            setDeleteLoading(true)
+            const { data } = await api.delete(ADMIN_DELETE_ONE_BLOG(blog?._id))
+            console.log(data)
+            setShowDeleteModal(false)
+            navigate("/admin/blogs/latest")
+        } catch (error) {
+            console.log(error.response.data.message)
+        }finally {
+            setDeleteLoading(false)
+        }
+    }
+
+    const handleToggleComments = async () => {
+        try {
+            const { data } = await api.patch(ADMIN_TOGGLE_COMMENT_ROUTE(blog?._id))
+            console.log(data)
+            setAllowComments(data.allowComments)
+        } catch (error) {
+            console.log(error.response.data.message)
+        }
+    }
 
     if (blog.length === 0) {
         return (
@@ -147,11 +183,11 @@ export default function AdminBlogDetails() {
                         className="bg-white border border-stone-200 rounded-2xl shadow-sm p-4 flex items-center gap-3.5"
                     >
                         <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0 text-emerald-600">
-                            <Share2 size={18} />
+                            <Bookmark size={18} />
                         </div>
                         <div>
-                            <p className="text-xs text-stone-400 font-medium">Shares</p>
-                            <p className="text-lg font-semibold text-stone-800">{blog.shares || "-"}</p>
+                            <p className="text-xs text-stone-400 font-medium">Bookmarks</p>
+                            <p className="text-lg font-semibold text-stone-800">{totalBookmarks}</p>
                         </div>
                     </motion.div>
                 </div>
@@ -235,13 +271,13 @@ export default function AdminBlogDetails() {
                                         Post Status
                                     </label>
                                     <div className="grid grid-cols-2 gap-1.5">
-                                        {["Published", "Draft"].map((status) => (
+                                        {["published", "draft"].map((status) => (
                                             <button
                                                 key={status}
                                                 onClick={() => handleStatusChange(status)}
                                                 className={`py-2 px-2 rounded-xl text-xs font-semibold border transition-all ${currentStatus === status
-                                                        ? "bg-[#0077CC] text-white border-[#0077CC] shadow-sm"
-                                                        : "bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100"
+                                                    ? "bg-[#0077CC] text-white border-[#0077CC] shadow-sm"
+                                                    : "bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100"
                                                     }`}
                                             >
                                                 {status}
@@ -257,7 +293,7 @@ export default function AdminBlogDetails() {
                                             <p className="text-[11px] text-stone-400">Pin to top of blog index</p>
                                         </div>
                                         <button
-                                            onClick={handleFeaturedToggle}
+                                            onClick={handleToggleFeatured}
                                             className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ${isFeatured ? "bg-[#0077CC]" : "bg-stone-300"
                                                 }`}
                                         >
@@ -276,7 +312,7 @@ export default function AdminBlogDetails() {
                                             <p className="text-[11px] text-stone-400">Enable public discussion</p>
                                         </div>
                                         <button
-                                            onClick={() => setAllowComments(!allowComments)}
+                                            onClick={handleToggleComments}
                                             className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ${allowComments ? "bg-[#0077CC]" : "bg-stone-300"
                                                 }`}
                                         >
@@ -370,12 +406,10 @@ export default function AdminBlogDetails() {
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={() => {
-                                        setShowDeleteModal(false);
-                                    }}
+                                    onClick={handleDelete}
                                     className="flex-1 py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors shadow-sm"
                                 >
-                                    Yes, Delete
+                                    {deleteLoading ? <CircleDashed size={20} className="animate-spin" /> : "Yes, Delete"}
                                 </button>
                             </div>
                         </motion.div>
