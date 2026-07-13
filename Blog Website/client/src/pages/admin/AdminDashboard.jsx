@@ -4,23 +4,24 @@ import api from "../../api/axios"
 import { ADMIN_STATS_ROUTE, ADMIN_ALL_BLOGS_ROUTE,ADMIN_ALL_USERS_ROUTE } from "../../constants/route";
 import {
     Users, FileText, Eye, MessageSquare,
-    ArrowRight, FilePlus, Star,
-    UserMinus, FileMinus, Bookmark
+    ArrowRight, Star, Bookmark,
+    User2,
+    File,
+    Clock
 } from "lucide-react";
 import AdminStatsCard from "../../components/admin/AdminStatsCard";
 import { useNavigate } from "react-router-dom";
 
 const statusStyles = {
     Published: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    Pending: "bg-amber-50 text-amber-600 border-amber-100",
     Draft: "bg-stone-100 text-stone-500 border-stone-200",
 };
 
 const quickActions = [
-    { icon: UserMinus, label: "Delete user", color: "#EF4444", bg: "#FEE2E2" },
-    { icon: FilePlus, label: "New category", color: "#7c3aed", bg: "#f5f3ff" },
-    { icon: FileMinus, label: "Delete post", color: "#EF4444", bg: "#FEE2E2" },
-    { icon: Star, label: "Make Blog Featured", color: "#f59e0b", bg: "#f1f5f9" },
+    { icon: User2, label: "View All Users", color: "#EF4444", bg: "#FEE2E2" },
+    { icon: FileText, label: "View All Blogs", color: "#7c3aed", bg: "#f5f3ff" },
+    { icon: File, label: "View Trending Blogs", color: "#EF4444", bg: "#FEE2E2" },
+    { icon: Clock, label: "View Recent Blogs", color: "#f59e0b", bg: "#f1f5f9" },
 ];
 
 export default function AdminDashboard() {
@@ -41,11 +42,11 @@ export default function AdminDashboard() {
 
     const stats = [
         { icon: Users, label: "Total users", value: totalUsers, change: 6, color: "#0077CC" },
-        { icon: FileText, label: "Total posts", value: totalBlogs, change: 9, color: "#7c3aed" },
+        { icon: FileText, label: "Total blogs", value: totalBlogs, change: 9, color: "#7c3aed" },
         {icon: Bookmark, label: "Total bookmarks", value: totalBookmarks, change: 14, color: "#059669" },
         { icon: Eye, label: "Total views", value: totalPublishedBlogs, change: 14, color: "#059669" },
-        { icon: FileText, label: "Draft posts", value: totalDraftBlogs, change: 14, color: "#059669" },
-        { icon: Star, label: "Featured posts", value: totalFeaturedBlogs, change: 14, color: "#059669" },
+        { icon: FileText, label: "Draft blogs", value: totalDraftBlogs, change: 14, color: "#059669" },
+        { icon: Star, label: "Featured blogs", value: totalFeaturedBlogs, change: 14, color: "#059669" },
         { icon: MessageSquare, label: "Comments", value: totalComments, change: -2, color: "#d97706" },
     ]
     
@@ -91,28 +92,18 @@ export default function AdminDashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.35 }}
-            className="min-h-screen bg-stone-50"
+            className="min-h-screen bg-stone-50 mt-20"
         >
-            {/* Header */}
-            <header className="bg-white border-b border-stone-100 sticky top-0 z-20">
-                <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 h-14 sm:h-16 flex items-center justify-between gap-3">
-                    <h1 className="text-sm font-semibold text-stone-800">Admin dashboard</h1>
-                    <span className="text-xs text-stone-400 hidden sm:inline">
-                        Welcome back, Alex
-                    </span>
-                </div>
-            </header>
+
 
             <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 space-y-6 sm:space-y-8">
 
-                {/* Stats grid — 2 cols mobile, 4 cols desktop */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     {stats.map((s, i) => (
                         <AdminStatsCard key={s.label} {...s} delay={0.05 * i} />
                     ))}
                 </div>
 
-                {/* Quick actions — wraps on small screens */}
                 <motion.div
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -142,10 +133,8 @@ export default function AdminDashboard() {
                     </div>
                 </motion.div>
 
-                {/* Two-column: recent blogs + recent users — stacks on mobile/tablet */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
 
-                    {/* Recent blogs */}
                     <motion.div
                         initial={{ opacity: 0, y: 14 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -153,7 +142,7 @@ export default function AdminDashboard() {
                         className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden"
                     >
                         <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-stone-100">
-                            <h2 className="text-sm font-semibold text-stone-800">Recent posts</h2>
+                            <h2 className="text-sm font-semibold text-stone-800">Recent blogs</h2>
                             <button onClick={() => navigate("/admin/blogs")}
                             className="flex items-center gap-1 text-xs text-[#0077CC] hover:text-[#005FA3] font-medium transition-colors">
                                 View all <ArrowRight size={11} />
@@ -180,11 +169,12 @@ export default function AdminDashboard() {
                         </ul>
                     </motion.div>
 
-                    {/* Recent users */}
+
                     <motion.div
                         initial={{ opacity: 0, y: 14 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.35, delay: 0.25 }}
+                        onClick={() => navigate("/admin/users")}
                         className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden"
                     >
                         <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-stone-100">
@@ -219,34 +209,6 @@ export default function AdminDashboard() {
                     </motion.div>
                 </div>
 
-                {/* Simple chart placeholder — responsive bars */}
-                <motion.div
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, delay: 0.3 }}
-                    className="bg-white border border-stone-200 rounded-2xl shadow-sm p-4 sm:p-5"
-                >
-                    <h2 className="text-sm font-semibold text-stone-800 mb-5">
-                        Platform activity — last 7 days
-                    </h2>
-                    <div className="flex items-end gap-2 sm:gap-3 h-28 sm:h-32">
-                        {[60, 85, 45, 95, 70, 55, 80].map((h, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ scaleY: 0 }}
-                                animate={{ scaleY: 1 }}
-                                transition={{ duration: 0.4, delay: 0.05 * i, ease: "easeOut" }}
-                                style={{ height: `${h}%`, originY: 1 }}
-                                className="flex-1 bg-[#E0F0FF] hover:bg-[#0077CC] rounded-t-lg transition-colors duration-200 min-w-0"
-                            />
-                        ))}
-                    </div>
-                    <div className="flex justify-between mt-2 text-[10px] text-stone-400">
-                        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-                            <span key={d} className="flex-1 text-center">{d}</span>
-                        ))}
-                    </div>
-                </motion.div>
             </div>
         </motion.div>
     );

@@ -25,7 +25,6 @@ export const userLogin = async (req, res) => {
         if (!isMatched) {
             return res.status(401).json({ success: false, message: "Incorrect Password" })
         }
-        console.log("LOGIN SECRET:", process.env.JWT_SECRET);
 
         const token = jwt.sign({
             id: user._id,

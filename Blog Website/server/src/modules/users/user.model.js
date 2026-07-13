@@ -44,10 +44,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    numberOfBlogs: {
-        type: Number,
-        default: 0
-    },
     bio: {
         type: String,
         default: ""
@@ -84,24 +80,14 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    totalFollowers: {
+    totalComments: {
         type: Number,
         default: 0
     },
-    totalFollowing: {
+    totalBookmarks: {
         type: Number,
         default: 0
     },
-    followers: [{   
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        default: []
-    }],
-    following: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        default: []
-    }],
     status: {
         type: String,
         default: "active",

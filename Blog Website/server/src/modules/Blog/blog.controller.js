@@ -115,9 +115,43 @@ export const getAllBlogs = async (req, res) => {
 
         const skip = (page - 1) * limit
 
-        const totalBlogs = await Blog.countDocuments()
+        const {search, sort, category} = req.query
 
-        const blogs = await Blog.find().sort({ createdAt: -1 }).populate("author", "name email profileImg").skip(skip).limit(limit)
+        let query = {};
+
+        if(search){
+            query.title = { $regex: search, $options: "i" }
+        }
+
+        if(category){
+            query.category = category
+        }
+
+        let sortOption = { createdAt: -1 };
+
+        switch(sort){
+            case "latest" :
+                sortOption = { publishedAt: -1 };
+                break;
+            case "oldest" :
+                sortOption = { publishedAt: 1 };
+                break;
+            case "views" :
+                sortOption = { views: -1 };
+                break;
+            case "likes" : 
+                sortOption = { likes: -1 };
+                break;
+            case "trending":
+                sortOption = { trendingScore: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
+
+        const totalBlogs = await Blog.countDocuments(query)
+
+        const blogs = await Blog.find(query).sort(sortOption).populate("author", "name email profileImg").skip(skip).limit(limit)
 
         if(blogs.length === 0) {
             return res.status(404).json({ success: false, message: "No blogs found" })
@@ -140,9 +174,7 @@ export const getSingleBlog = async (req, res) => {
     }
     const userId = req.userId
     try {
-        const filter = { slug };
-
-        
+ 
         const blog = await Blog.findOne({ slug }).populate("author", "name email profileImg bio")
         if (!blog) {
             return res.status(404).json({ success: false, message: "Blog not found" })

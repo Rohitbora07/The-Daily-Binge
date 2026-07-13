@@ -155,18 +155,51 @@ export const adminStats = async (req, res) => {
 
 export const getAllTimedBlogs = async (req, res) => {
     try {
-        const { range } = req.query
+        const { range, search, sort } = req.query
 
         const page = Number(req.query.page) || 1
         const limit = Number(req.query.limit) || 15
 
         const skip = (page - 1) * limit
 
-        let filter = {};
-        const now = Date.now()
+        let query = {
+            status: "published"
+        };
+
+        if (search) {
+            query.title = { $regex: search, $options: "i" }
+        }
+
+        let sortOption = { createdAt: -1 };
+
+        switch (sort) {
+            case "latest":
+                sortOption = { publishedAt: -1 }
+                break;
+            case "oldest":
+                sortOption = { publishedAt: 1 }
+                break;
+            case "views":
+                sortOption = { views: -1 };
+                break;
+            case "likes":
+                sortOption = { likes: -1 };
+                break;
+            case "bookmarks":
+                sortOption = { bookmarks: -1 };
+                break;
+            case "comments":
+                sortOption = { commentsCount: -1 };
+                break;
+            case "trending":
+                sortOption = { trendingScore: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
 
         if (range === "24h") {
-            filter.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
         }
 
         if (range === "yesterday") {
@@ -176,19 +209,19 @@ export const getAllTimedBlogs = async (req, res) => {
             const yesterday = new Date(today);
             yesterday.setDate(today.getDate() - 1);
 
-            filter.publishedAt = {
+            query.publishedAt = {
                 $gte: yesterday,
                 $lt: today
             };
         }
 
         if (range === "week") {
-            filter.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
         }
 
-        const totalBlogs = await Blog.countDocuments(filter)
+        const totalBlogs = await Blog.countDocuments(query)
 
-        const blogs = await Blog.find(filter).sort({ createdAt: -1 }).populate("author", "name email profileImg").skip(skip).limit(limit)
+        const blogs = await Blog.find(query).sort(sortOption).populate("author", "name email profileImg").skip(skip).limit(limit)
 
         return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
 
@@ -200,35 +233,68 @@ export const getAllTimedBlogs = async (req, res) => {
 
 export const getAllTimedTrendingBlogs = async (req, res) => {
     try {
-        const { range } = req.query
+        const { range, search, sort } = req.query
 
         const page = Number(req.query.page) || 1
         const limit = Number(req.query.limit) || 15
 
         const skip = (page - 1) * limit
 
-        let filter = {
+        let query = {
             trendingScore: { $gt: 0 },
             status: "published"
+        };
+
+        if (search) {
+            query.title = { $regex: search, $options: "i" }
         }
+
+        let sortOption = { createdAt: -1 };
+
+        switch (sort) {
+            case "latest":
+                sortOption = { publishedAt: -1 }
+                break;
+            case "oldest":
+                sortOption = { publishedAt: 1 }
+                break;
+            case "views":
+                sortOption = { views: -1 };
+                break;
+            case "likes":
+                sortOption = { likes: -1 };
+                break;
+            case "bookmarks":
+                sortOption = { bookmarks: -1 };
+                break;
+            case "comments":
+                sortOption = { commentsCount: -1 };
+                break;
+            case "trending":
+                sortOption = { trendingScore: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
+
         const now = Date.now()
 
 
         if (range === "24h") {
-            filter.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
         }
         if (range === "week") {
-            filter.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
         }
         if (range === "month") {
-            filter.publishedAt = { $gte: new Date(now - 30 * 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now - 30 * 24 * 60 * 60 * 1000) }
         }
 
-        const totalBlogs = await Blog.countDocuments(filter)
+        const totalBlogs = await Blog.countDocuments(query)
 
-        const blogs = await Blog.find(filter).sort({ trendingScore: -1 }).populate("author", "name email profileImg").skip(skip).limit(limit)
+        const blogs = await Blog.find(query).sort(sortOption).populate("author", "name email profileImg").skip(skip).limit(limit)
 
-        return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
+        return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit), sortOption, query, message: "Fetched trending blogs successfully" })
     } catch (err) {
         console.log("Error:", err);
         return res.status(500).json({
@@ -245,9 +311,49 @@ export const getAllBlogs = async (req, res) => {
 
         const skip = (page - 1) * limit
 
-        const totalBlogs = await Blog.countDocuments()
+        const { search, sort, status } = req.query
 
-        const blogs = await Blog.find().sort({ createdAt: -1 }).populate("author", "name email profileImg").skip(skip).limit(limit)
+        let query = {};
+
+        if (search) {
+            query.title = { $regex: search, $options: "i" }
+        }
+
+        if (status) {
+            if (status !== "all") query.status = status
+        }
+
+        let sortOption = { createdAt: -1 };
+
+        switch (sort) {
+            case "latest":
+                sortOption = status === "published" ? { publishedAt: -1 } : { createdAt: -1 };
+                break;
+            case "oldest":
+                sortOption = status === "published" ? { publishedAt: 1 } : { createdAt: 1 };
+                break;
+            case "views":
+                sortOption = { views: -1 };
+                break;
+            case "likes":
+                sortOption = { likes: -1 };
+                break;
+            case "bookmarks":
+                sortOption = { bookmarks: -1 };
+                break;
+            case "comments":
+                sortOption = { commentsCount: -1 };
+                break;
+            case "trending":
+                sortOption = { trendingScore: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
+
+        const totalBlogs = await Blog.countDocuments(query)
+
+        const blogs = await Blog.find(query).sort(sortOption).populate("author", "name email profileImg").skip(skip).limit(limit)
 
         return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
     } catch (err) {
@@ -319,35 +425,138 @@ export const unPublishBlog = async (req, res) => {
     }
 }
 
+
+export const getUserAllBlogs = async (req, res) => {
+    try {
+        const { userId } = req.params
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "Unauthorized User" })
+        }
+
+        const { search, sort, status } = req.query
+        const page = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || 15
+
+        const skip = (page - 1) * limit
+
+        let query = {
+            author: userId,
+        };
+
+        if (search) {
+            query.title = { $regex: search, $options: "i" }
+        }
+
+        if (status) {
+            if (status !== "all") query.status = status
+        }
+
+        let sortOption = { createdAt: -1 };
+
+
+        switch (sort) {
+            case "latest":
+                sortOption = status === "published" ? { publishedAt: -1 } : { createdAt: -1 };
+                break;
+            case "oldest":
+                sortOption = status === "published" ? { publishedAt: 1 } : { createdAt: 1 };
+                break;
+            case "views":
+                sortOption = { views: -1 };
+                break;
+            case "likes":
+                sortOption = { likes: -1 };
+                break;
+            case "bookmarks":
+                sortOption = { bookmarks: -1 };
+                break;
+            case "comments":
+                sortOption = { commentsCount: -1 };
+                break;
+            case "trending":
+                sortOption = { trendingScore: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
+
+        const totalBlogs = await Blog.countDocuments(query)
+
+        const blogs = await Blog.find(query).sort(sortOption).populate("author", "name email profileImg").skip(skip).limit(limit)
+
+        return res.status(200).json({
+            success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit)
+        })
+    } catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        })
+    }
+}
+
 export const getAllUsers = async (req, res) => {
     try {
         const page = Number(req.query.page) || 1
         const limit = Number(req.query.limit) || 15
         const skip = (page - 1) * limit
 
-        const {search, status, isEmailVerified} = req.query
+        const { search, status, isEmailVerified, sort } = req.query
 
         const filter = {
             role: { $ne: "admin" },
         }
 
-        if(search){
+        if (search) {
             filter.$or = [
                 { name: { $regex: search, $options: "i" } },
                 { email: { $regex: search, $options: "i" } }
             ]
         }
 
-        if(status){
-            filter.status = status
+        if (status) {
+            if (status !== "all") filter.status = status
         }
-        if(isEmailVerified !== undefined){
-            filter.isEmailVerified = isEmailVerified === "true"
+
+        let sortOption = { createdAt: -1 };
+
+        switch (sort) {
+            case "latest":
+                sortOption = { createdAt: -1 };
+                break;
+            case "oldest":
+                sortOption = { createdAt: 1 };
+                break;
+            case "views":
+                sortOption = { totalViews: -1 };
+                break;
+            case "likes":
+                sortOption = { totalLikes: -1 };
+                break;
+            case "blogs":
+                sortOption = { totalBlogs: -1 };
+                break;
+            case "comments":
+                sortOption = { commentsCount: -1 };
+                break;
+            case "bookmarks":
+                sortOption = { totalBookmarks: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
+
+        if (
+            isEmailVerified === "true" ||
+            isEmailVerified === "false"
+        ) {
+            filter.isEmailVerified = isEmailVerified === "true";
         }
 
         const totalUsers = await User.countDocuments(filter)
-        
-        const users = await User.find(filter).select("-password -VerificationOtp -emailOtpExpiry -passResetOtp -passResetOtpExpiry").sort({ createdAt: -1 }).skip(skip).limit(limit)
+
+        const users = await User.find(filter).sort(sortOption).select("-password -VerificationOtp -emailOtpExpiry -passResetOtp -passResetOtpExpiry").skip(skip).limit(limit)
         return res.status(200).json({ success: true, users, totalUsers, currentPage: page, totalPages: Math.ceil(totalUsers / limit) })
     } catch (err) {
         console.log("Error:", err);

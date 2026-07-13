@@ -98,16 +98,13 @@ const blogSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    searchKeywords: {
-        type: [String],
-        default: []
-    },
 }, { timestamps: true });
 
 blogSchema.index({ author: 1 });
 blogSchema.index({ category: 1 });
 blogSchema.index({ tags: 1 });
 blogSchema.index({ createdAt: -1 });
+blogSchema.index({ trendingScore: -1 });
 
 const Blog = mongoose.models.Blog || mongoose.model('Blog', blogSchema);
 

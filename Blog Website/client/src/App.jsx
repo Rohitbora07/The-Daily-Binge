@@ -19,11 +19,13 @@ import Trending from './pages/explore/Trending'
 import EditorPick from './pages/explore/EditorPick'
 import UpdateBlog from './pages/writer/UpdateBlog'
 import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminBlogManager from './pages/admin/AdminBlogManager'
+import AdminAllBlogs from './pages/admin/AdminAllBlogs'
 import TrendingBlogs from "./pages/admin/BlogManager/TrendingBlogs"
 import LatestBlogs from "./pages/admin/BlogManager/LatestBlogs"
 import AdminBlogDetails from './pages/admin/BlogManager/BlogOperations'
 import AdminUserDetailPage from './pages/admin/AdminUserDetailPage'
+import AdminAllUsers from './pages/admin/AdminAllUser'
+import UserAllBlogs from './pages/admin/UserAllBlogs' 
 function App() {
   const location = useLocation()
   const hideLayout = ["/sign-in", "/sign-up","my-blogs"].includes(location.pathname);
@@ -51,11 +53,13 @@ function App() {
       <Route path="/explore/category/:category" element={<BlogByCategory />} />
       <Route path="/blog/update/:slug" element={<UpdateBlog />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
-      <Route path="/admin/blogs" element={<AdminBlogManager />} />
+      <Route path="/admin/blogs" element={<AdminAllBlogs />} />
+      <Route path="/admin/users" element={<AdminAllUsers />} />
       <Route path="/admin/blogs/trending" element={<TrendingBlogs />} />
       <Route path="/admin/blogs/latest" element={<LatestBlogs />} />
       <Route path="/admin/blogs/details/:slug" element={<AdminBlogDetails />} />
       <Route path="/admin/user/details/:id" element={<AdminUserDetailPage />} />
+      <Route path="/admin/user/:userId/blogs" element={<UserAllBlogs />} />
     </Routes>
     {!hideLayout && <Footer />}
 
