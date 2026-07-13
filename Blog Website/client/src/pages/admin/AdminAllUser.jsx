@@ -6,7 +6,7 @@ import SearchBar from "../../components/SearchBar";
 import Pagination from "../../components/Pagination";
 import { AnimatePresence } from "motion/react"
 import DeleteModal from "../../components/general/DeleteModal";
-import BlogFilterBar from "./BlogManager/BlogFilterBar";
+import FilterBar from "../../components/general/FilterBar";
 import UserCard from "./UserCard";
 import useDebounce from "../../hooks/useDebounce";
 
@@ -118,7 +118,7 @@ export default function AdminAllUsers() {
                 <div className="space-y-3">
                     <SearchBar value={searchTerm} setVal={setSearchTerm} />
 
-                    <BlogFilterBar
+                    <FilterBar
                         sortBy={sortBy}
                         setSortBy={setSortBy}
                         sortOptions={sortOptions}

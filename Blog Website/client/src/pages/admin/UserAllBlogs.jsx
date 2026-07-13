@@ -7,7 +7,7 @@ import SearchBar from "../../components/SearchBar";
 import Pagination from "../../components/Pagination";
 import { AnimatePresence } from "motion/react"
 import DeleteModal from "../../components/general/DeleteModal";
-import BlogFilterBar from "./BlogManager/BlogFilterBar";
+import BlogFilterBar from "../../components/general/FilterBar";
 import { useParams } from "react-router-dom";
 import useDebounce from "../../hooks/useDebounce";
 

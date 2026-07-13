@@ -1,156 +1,147 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "motion/react";import { GET_ALL_BLOGS } from "../../constants/route";
+import { motion } from "motion/react"; 
+import { GET_ALL_BLOGS } from "../../constants/route";
 import api from "../../api/axios";
 import BlogGrid from "../../components/BlogGrid";
 import BlogSidebar from "../../components/blog/BlogSidebar";
 import Pagination from "../../components/Pagination"
-
-
+import FilterBar from "../../components/general/FilterBar";
+import useDebounce from "../../hooks/useDebounce";
+import SearchBar from "../../components/SearchBar";
 
 export default function Latest() {
-    const [period, setPeriod] = useState("Today");
-    const [activeCat, setActiveCat] = useState(null);
-    const [activeTag, setActiveTag] = useState(null);
-    const [last24hrBlogs, setLast24hrBlogs] = useState([])
-    const [lastWeekBlogs, setLastWeekBlogs] = useState([])
-    const [yesterdayBlogs, setyesterdayBlogs] = useState([])
-    const [page, setPage] = useState(1)
+    const [latestBlogs, setlatestBlogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [yesterdayPage, setYesterdayPage] = useState(1)
-    const [totalYesterdayPages, setTotalYesterdayPages] = useState(1)
-    const [weeklyPage, setweeklyPage] = useState(1)
-    const [totalWeeklyPage, setTotalWeeklyPage] = useState(1)
 
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 500);
+    const [period, setPeriod] = useState("24h");
+    const [sortBy, setSortBy] = useState("latest");
 
-    const contentRef = useRef(null)
+    const sortOptions = [
+        { title: "Sort by Latest", value: "latest" },
+        { title: "Sort by Oldest", value: "oldest" },
+        { title: "Sort by Views", value: "views" },
+        { title: "Sort by Likes", value: "likes" },
+        { title: "Sort by Trending", value: "trending" },
+        { title: "Sort by Bookmarks", value: "bookmarks" },
+        { title: "Sort by Comments", value: "comments" }
+    ];
+
+    const timePeriod = [
+        { title: "Today", value: "24h" },
+        { title: "Yesterday", value: "yesterday" },
+        { title: "This Week", value: "week" },
+    ];
+
+    const contentRef = useRef(null);
 
     useEffect(() => {
         const getAll = async () => {
             try {
-                const { data } = await api.get(`${GET_ALL_BLOGS}?range=24h&page=${page}&limit=9`)
-                console.log("Today's data", data)
-                
-                setLast24hrBlogs(data.blogs || [])
-                const { data: weekData } = await api.get(`${GET_ALL_BLOGS}?range=week&page=${weeklyPage}&limit=9`)
-                
-                setLastWeekBlogs(weekData.blogs || [])
-                const { data: yesterday } = await api.get(`${GET_ALL_BLOGS}?range=yesterday&page=${yesterdayPage}&limit=9`)
-                setyesterdayBlogs(yesterday.blogs || [])
-                
-                setTotalPages(data.totalPages)
-                setTotalYesterdayPages(yesterday.totalPages)
-                setTotalWeeklyPage(weekData.totalPages)
+                setLoading(true);
+                const { data } = await api.get(`${GET_ALL_BLOGS}?range=${period}&page=${page}&limit=10&sort=${sortBy}&search=${debouncedSearch}`);
+                setlatestBlogs(data.blogs || []);
+                setTotalPages(data.totalPages || 1);
             } catch (error) {
-                console.log(error)
+                console.log(error);
+            } finally {
+                setLoading(false);
             }
-        }
-        getAll()
-    }, [page, yesterdayPage, weeklyPage])
-
-    const currentBlogs = period === "Today" ? last24hrBlogs : period === "Yesterday" ? yesterdayBlogs : lastWeekBlogs
-    const currentPage = period === "Today" ? page : period === "Yesterday" ? yesterdayPage : weeklyPage
-    const currentTotalPages = period === "Today" ? totalPages : period === "Yesterday" ? totalYesterdayPages : totalWeeklyPage
+        };
+        getAll();
+    }, [page, period, sortBy, debouncedSearch]);
 
 
+    const tags = latestBlogs ? [...new Set(latestBlogs.map(blog => blog.tags).flat())].slice(0, 20) : [];
+    const latestAuthors = latestBlogs ? [...new Map(latestBlogs.map(blog => [blog?.author?._id, blog?.author])).values()].filter(Boolean) : [];
 
-    const tags = currentBlogs ? [...new Set(currentBlogs.map(blog => blog.tags).flat())].slice(0, 20) : []
-    const latestAuthors = currentBlogs ? [... new Map(currentBlogs.map(blog => [blog.author._id, blog.author])).values()] : []
-
-    const categoryMap = new Map()
-    if (currentBlogs) {
-        for (const item of currentBlogs) {
+    const categoryMap = new Map();
+    if (latestBlogs) {
+        for (const item of latestBlogs) {
             const categ = item.category;
-            categoryMap.set(categ, (categoryMap.get(categ) || 0) + 1)
+            if (categ) categoryMap.set(categ, (categoryMap.get(categ) || 0) + 1);
         }
     }
 
-
-
     const handlePageChange = (newPage) => {
-        if(period === "Today") setPage(newPage)
-        else if( period === "Yesterday" ) setYesterdayPage(newPage)
-        else setweeklyPage(newPage)
+        setPage(newPage);
         if (contentRef.current) {
             contentRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
         }
-    }
-
-
-
-
-    if (!last24hrBlogs || !lastWeekBlogs || !yesterdayBlogs) {
-        return (
-            <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0077CC]"></div>
-            </div>
-        );
-    }
+    };
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-stone-50">
-            {/* Hero / Header */}
+        <motion.div ref={contentRef} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-stone-50">
             <section className="bg-white border-b border-stone-100">
-                <div className="max-w-screen-xl mx-auto px-4 pt-12 pb-0">
-                    <div className="mb-8">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full mb-5">
+                <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6 sm:pt-12 sm:pb-8">
+                    <div className="mb-4">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full mb-4">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             Live feed
                         </span>
                         <h1 className="font-serif text-3xl sm:text-5xl font-bold text-stone-900 mb-3">Fresh Stories</h1>
-                        <p className="text-stone-400 text-sm max-w-lg mb-4">Stay updated with our latest releases.</p>
-                        {/* <div className="text-xs text-stone-400 font-semibold">{stats.total} fresh stories</div> */}
-                    </div>
-
-                    {/* Navigation Tabs */}
-                    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-t border-stone-100 -mx-4 px-4 flex gap-6 overflow-x-auto">
-                        {["Today", "Yesterday", "This Week"].map(p => (
-                            <button
-                                key={p}
-                                onClick={() => setPeriod(p)}
-                                className={`relative py-3.5 text-sm font-medium transition-colors whitespace-nowrap ${period === p ? "text-[#0077CC]" : "text-stone-500 hover:text-stone-800"}`}
-                            >
-                                {p}
-                                {period === p && <motion.div layoutId="fresh-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0077CC]" />}
-                            </button>
-                        ))}
+                        <p className="text-stone-500 text-sm sm:text-base max-w-lg">Stay updated with our latest releases.</p>
                     </div>
                 </div>
             </section>
 
-            {/* Main Content Body */}
-            <div className="max-w-screen-xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8 items-start">
-
-                {/* Blog Grid Column */}
-                <div className="flex-1 min-w-0 w-full">
-
-                    {/* Active Filter Indicators */}
-                    <AnimatePresence>
-                        {(activeCat || activeTag) && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex gap-2 mb-5 flex-wrap">
-                                {activeCat && <button onClick={() => setActiveCat(null)} className="text-xs font-semibold text-[#0077CC] bg-[#E0F0FF] px-3 py-1 rounded-lg">{activeCat} ×</button>}
-                                {activeTag && <button onClick={() => setActiveTag(null)} className="text-xs font-semibold text-[#0077CC] bg-[#E0F0FF] px-3 py-1 rounded-lg">#{activeTag} ×</button>}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    {currentBlogs.length > 0 ? (
-                        <BlogGrid blogs={currentBlogs} sliceLimit={currentBlogs.length} />
-                    ) : (
-                        <div className="text-center py-12 text-stone-400">No stories found matching the active criteria.</div>
-                    )}
-                    <Pagination currentPage={currentPage}
-                        totalPages={currentTotalPages}
-                        onPageChange={handlePageChange}
+            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+                <div className="space-y-4">
+                    <SearchBar value={searchTerm} setVal={setSearchTerm} />
+                    <FilterBar
+                        sortBy={sortBy}
+                        setSortBy={setSortBy}
+                        sortOptions={sortOptions}
+                        status={period}
+                        setStatus={setPeriod}
+                        statusOptions={timePeriod}
                     />
-
                 </div>
 
-                <div className="hidden lg:block w-72 xl:w-80 flex-shrink-0 sticky top-16">
-                    <BlogSidebar tags={tags} categoryMap={categoryMap} authors={latestAuthors} title="Latest" />
+                <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
+                    <div className="flex-1 w-full min-w-0">
+                        {loading ? (
+                            <div className="w-full flex items-center justify-center py-24 bg-white rounded-2xl border border-stone-200/60 shadow-sm">
+                                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0077CC]"></div>
+                            </div>
+                        ) : latestBlogs.length > 0 ? (
+                            <BlogGrid blogs={latestBlogs} />
+                        ) : (
+                            <div className="w-full text-center py-16 sm:py-24 px-4 bg-white rounded-2xl border border-stone-200/60 shadow-sm flex flex-col items-center justify-center">
+                                <div className="text-stone-300 mb-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-stone-800 font-medium text-base mb-1">No Articles Found</h3>
+                                <p className="text-stone-400 text-xs sm:text-sm max-w-xs leading-relaxed">
+                                    {searchTerm
+                                        ? `No latest articles match "${searchTerm}". Try tweaking your keywords.`
+                                        : `We couldn't find any articles published within this time frame (${period}).`}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0 sticky top-24">
+                        <BlogSidebar tags={tags} categoryMap={categoryMap} authors={latestAuthors} title="Latest" />
+                    </aside>
                 </div>
+
+                {!loading && latestBlogs.length > 0 && (
+                    <div className="pt-4 border-t border-stone-100">
+                        <Pagination
+                            currentPage={page}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                        />
+                    </div>
+                )}
             </div>
-
-
         </motion.div>
     );
 }

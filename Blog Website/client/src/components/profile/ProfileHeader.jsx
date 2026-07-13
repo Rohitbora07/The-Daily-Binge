@@ -1,18 +1,14 @@
 import { motion } from "motion/react";
-import {MapPin, CalendarDays, UserPlus, UserCheck,} from "lucide-react";
-// import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa"
-import { useState } from "react"
+import { MapPin, CalendarDays, CheckCircle } from "lucide-react";
+import { FaLinkedin, FaTwitter, FaGithub, FaInstagram } from "react-icons/fa"
 
 
 export default function ProfileHeader({ user }) {
-    const [following, setFollowing] = useState(false);
-        const makeDate = (date) => {
-            const createdAt = new Date(date);
-            const options = { year: 'numeric', month: 'long' };
-            return createdAt.toLocaleDateString(undefined, options);
-        }
-
-
+    const makeDate = (date) => {
+        const createdAt = new Date(date);
+        const options = { year: 'numeric', month: 'long' };
+        return createdAt.toLocaleDateString(undefined, options);
+    }
     return (
         <div>
             <motion.div
@@ -44,28 +40,26 @@ export default function ProfileHeader({ user }) {
                         />
                     </motion.div>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.35, delay: 0.2 }}
-                        className="flex items-center gap-2.5 sm:mb-1"
-                    >
-                        <motion.button
-                            whileHover={{ scale: 1.03, y: -1 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={() => setFollowing(!following)}
-                            className={`flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 ${following
-                                ? "bg-stone-100 text-stone-700 border border-stone-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200"
-                                : "bg-[#0077CC] text-white hover:bg-[#005FA3]"
-                                }`}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.2 }}
                         >
-                            {following ? (
-                                <><UserCheck size={15} />Following</>
+                            {user.isVerified ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                                    <CheckCircle size={14} className="text-emerald-600" />
+                                    Verified
+                                </span>
                             ) : (
-                                <><UserPlus size={15} />Follow</>
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 border border-red-200">
+                                    <CheckCircle size={14} className="text-red-600" />
+                                    Not Verified
+                                </span>
                             )}
-                        </motion.button>
-                    </motion.div>
+                        </motion.div>
+                    </div>
+
                 </div>
 
                 {/* Name + bio block */}
@@ -80,7 +74,7 @@ export default function ProfileHeader({ user }) {
                             {user.name}
                         </h1>
                         <span className="text-xs font-semibold text-[#0077CC] bg-[#E0F0FF] px-2.5 py-1 rounded-lg">
-                            {user.role}
+                            {user.role.toUpperCase()}
                         </span>
                     </div>
 
@@ -99,17 +93,35 @@ export default function ProfileHeader({ user }) {
                         </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                        {/* {socials.map(({ icon: Icon, label, href }) => (
-                            <a
-                                key={label}
-                                href={href}
-                                className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-[#0077CC] bg-stone-50 hover:bg-[#E0F0FF] border border-stone-200 hover:border-[#C8D8E8] px-3 py-1.5 rounded-xl transition-all duration-200"
-                            >
-                                <Icon size={12} />
-                                {label}
-                            </a>
-                        ))} */}
+                    <div className="bg-stone-50/60 p-4 rounded-xl border border-stone-200/60 flex flex-col justify-center">
+                        <span className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2 block">
+                            Connected Accounts
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                            {user.github && (
+                                <a href={user.github} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-stone-200 text-xs font-medium text-stone-600 hover:text-stone-900 hover:border-stone-400 transition-all shadow-2xs">
+                                    <FaGithub size={13} className="text-stone-500" /> GitHub
+                                </a>
+                            )}
+                            {user.twitter && (
+                                <a href={user.twitter} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-stone-200 text-xs font-medium text-stone-600 hover:text-blue-500 hover:border-blue-300 transition-all shadow-2xs">
+                                    <FaTwitter size={13} className="text-blue-400" /> Twitter
+                                </a>
+                            )}
+                            {user.linkedin && (
+                                <a href={user.linkedin} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-stone-200 text-xs font-medium text-stone-600 hover:text-blue-700 hover:border-blue-400 transition-all shadow-2xs">
+                                    <FaLinkedin size={13} className="text-blue-600" /> LinkedIn
+                                </a>
+                            )}
+                            {user.instagram && (
+                                <a href={user.instagram} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-stone-200 text-xs font-medium text-stone-600 hover:text-pink-600 hover:border-pink-300 transition-all shadow-2xs">
+                                    <FaInstagram size={13} className="text-pink-500" /> Instagram
+                                </a>
+                            )}
+                            {!user.github && !user.twitter && !user.linkedin && !user.instagram && (
+                                <span className="text-xs text-stone-400 italic py-1">No linked social records found</span>
+                            )}
+                        </div>
                     </div>
                 </motion.div>
             </div>

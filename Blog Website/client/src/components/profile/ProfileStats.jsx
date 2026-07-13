@@ -1,15 +1,15 @@
 import { motion } from "motion/react";
-import { Eye, Heart, Users, FileText } from "lucide-react";
+import { Eye, Heart, Bookmark, File, MessageCircle } from "lucide-react";
 
 
 
 export default function ProfileStats({user}) {
     const stats = [
     { icon: Heart, label: "Total likes", value: user?.totalLikes, color: "#e11d48", bg: "#fff1f2" },
-    { icon: Users, label: "Followers", value: user?.followers, color: "#059669", bg: "#ecfdf5" },
-    { icon: Users, label: "Following", value: user?.following, color: "#2563eb", bg: "#eff6ff" },
+    { icon: File, label: "Total Blogs", value: user?.totalBlogs, color: "#059669", bg: "#ecfdf5" },
+    { icon: MessageCircle, label: "Total Comments", value: user?.totalComments, color: "#2563eb", bg: "#eff6ff" },
     { icon: Eye, label: "Total views", value: user?.totalViews, color: "#f59e0b", bg: "#fffbeb" },
-    { icon: FileText, label: "Total blogs", value: user?.totalBlogs, color: "#7c3aed", bg: "#f3e8ff" }
+    { icon: Bookmark, label: "Total bookmarks", value: user?.totalBookmarks, color: "#7c3aed", bg: "#f3e8ff" }
 ];
     return (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 py-7">

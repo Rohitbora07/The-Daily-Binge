@@ -10,7 +10,7 @@ adminBlogRouter.use(adminAuth)
 
 adminBlogRouter.patch("/blog/:id/feature", featureBlog)
 adminBlogRouter.patch("/blog/:id/toggle-comments", toggleComments)
-adminBlogRouter.delete("/blog/:id/delete", deleteOneBlog)
+adminBlogRouter.post("/blog/:id/delete", deleteOneBlog)
 adminBlogRouter.post("/blog/delete", deleteManyBlog)
 adminBlogRouter.get("/stats", adminStats)
 adminBlogRouter.get("/blog/recent", getAllTimedBlogs)

@@ -1,29 +1,24 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Search, TrendingUp, Sparkles, Globe, ChevronDown } from "lucide-react";
+import { Search, TrendingUp, Sparkles, Globe } from "lucide-react";
 import BlogCardFeatured from "../components/blog/BlogCardFeatured";
 import BlogSidebar from "../components/blog/BlogSidebar";
 import { GET_ALL_BLOGS, TRENDING_BLOGS } from "../constants/route";
 import api from "../api/axios";
-import SearchBar from "../components/SearchBar"
-// import { useNavigate } from "react-router-dom";
 import TitleBar from "../components/TitleBar";
 import BlogGrid from "../components/BlogGrid";
 
 
 
-const sortOptions = ["Newest first", "Oldest first", "Most viewed", "Most liked"];
+
 
 
 export default function BlogListing() {
-    // const [activeCategory, setActiveCategory] = useState("All");
-    const [search, setSearch] = useState("");
+
     const [blogs, setBlogs] = useState(null)
     const [todayTrendingBlogs, setTodayTrendingBlogs] = useState(null)
     const [latestBlogs, setLatestBlogs] = useState(null)
 
-    const [sort, setSort] = useState("Sort by");
-    const [sortOpen, setSortOpen] = useState(false)
 
     // const navigate = useNavigate()
 
@@ -47,11 +42,7 @@ export default function BlogListing() {
 
 
 
-    const seachedBlogs = blogs && blogs.filter(blogs =>
-        blogs.title.toLowerCase().includes(search.toLowerCase()) ||
-        blogs.category.toLowerCase().includes(search.toLowerCase()) ||
-        blogs.author.name.toLowerCase().includes(search.toLowerCase())
-    )
+
 
     const tags = blogs ? [...new Set(blogs.map(blog => blog.tags).flat())].slice(0, 20) : [];
     const authors = blogs ? [...new Map(blogs.map(blog => [blog.author._id,blog.author])).values()] : []
@@ -94,46 +85,7 @@ export default function BlogListing() {
                             <br />
                             <span className="text-[#0077CC]">reading.</span>
                         </h1>
-                        <div className=" flex sm:flex-row flex-col justify-between" >
-                            <SearchBar value={search} setVal={setSearch} />
-                            <div className=" ml-20">
-                                <button
-                                    onClick={() => setSortOpen(p => !p)}
-                                    className="flex items-center w-48 justify-center py-3.5 gap-2 px-4 rounded-2xl border border-stone-200 bg-white text-sm text-stone-700 placeholder:text-stone-400 shadow-sm focus:outline-none focus:border-[#0077CC] focus:ring-2 focus:ring-[#E0F0FF] transition-all"
-                                >
-                                    {sort}
-                                    <ChevronDown
-                                        size={13}
-                                        className={`text-stone-400 transition-transform duration-200 ${sortOpen ? "rotate-180" : ""}`}
-                                    />
-                                </button>
-                                {
-                                    sortOpen &&
-                                    <motion.ul
-                                        initial={{ opacity: 0, y: -6 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -6 }}
-                                        transition={{ duration: 0.15 }}
-                                        className="absolute z-20  mt-1.5 w-48 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden"
-                                    >
-                                        {sortOptions.map((s) => (
-                                            <li key={s}>
-                                                <button
-                                                    onClick={() => { setSort(s); setSortOpen(false); }}
-                                                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-stone-50 ${sort === s
-                                                        ? "text-[#0077CC] font-medium bg-[#E0F0FF]"
-                                                        : "text-stone-700"
-                                                        }`}
-                                                >
-                                                    {s}
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </motion.ul>
-                                }
 
-                            </div>
-                        </div>
 
                     </motion.div>
                 </div>
@@ -141,7 +93,7 @@ export default function BlogListing() {
 
             <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 py-0">
 
-                {blogs && !search && (
+                {blogs &&  (
                     <div className="mb-10">
                         <BlogCardFeatured blog={blogs[0]} />
                     </div>
@@ -152,7 +104,7 @@ export default function BlogListing() {
 
                     <div className="flex-1 min-w-0">
 
-                        {!search && <TitleBar Icon={Globe} title="Latest Articles" destination={`/explore/latest`} />}
+                        <TitleBar Icon={Globe} title="Latest Articles" destination={`/explore/latest`} />
                         <AnimatePresence mode="wait">
                             {latestBlogs.length === 0 ? (
                                 <motion.div
@@ -168,17 +120,13 @@ export default function BlogListing() {
                                     <h3 className="text-stone-700 font-semibold mb-1">
                                         No articles found
                                     </h3>
-                                    <p className="text-sm text-stone-400 max-w-xs">
-                                        {search
-                                            && `Nothing matches "${search}". Try different keywords.`}
-                                    </p>
                                 </motion.div>
                             ) : (
                                 <BlogGrid blogs={latestBlogs} sliceLimit={3} />
                             )}
                         </AnimatePresence>
 
-                        {!search && <TitleBar Icon={TrendingUp} title="Trending Articles" destination={`/explore/trending`} />}
+                        <TitleBar Icon={TrendingUp} title="Trending Articles" destination={`/explore/trending`} />
 
                         <AnimatePresence mode="wait">
                             {todayTrendingBlogs.length === 0 ? (
@@ -195,20 +143,17 @@ export default function BlogListing() {
                                     <h3 className="text-stone-700 font-semibold mb-1">
                                         No articles found
                                     </h3>
-                                    <p className="text-sm text-stone-400 max-w-xs">
-                                        {search
-                                            && `Nothing matches "${search}". Try different keywords.`}
-                                    </p>
+
                                 </motion.div>
                             ) : (
                                 <BlogGrid blogs={todayTrendingBlogs} sliceLimit={3} />
                             )}
                         </AnimatePresence>
 
-                        {!search && <TitleBar Icon={Sparkles} title="Editor's Pick" destination={`/explore/editor-pick`} />}
+                        <TitleBar Icon={Sparkles} title="Editor's Pick" destination={`/explore/editor-pick`} />
 
                         <AnimatePresence mode="wait">
-                            {seachedBlogs.length === 0 ? (
+                            {blogs.length === 0 ? (
                                 <motion.div
                                     key="empty"
                                     initial={{ opacity: 0 }}
@@ -222,13 +167,9 @@ export default function BlogListing() {
                                     <h3 className="text-stone-700 font-semibold mb-1">
                                         No articles found
                                     </h3>
-                                    <p className="text-sm text-stone-400 max-w-xs">
-                                        {search
-                                            && `Nothing matches "${search}". Try different keywords.`}
-                                    </p>
                                 </motion.div>
                             ) : (
-                                <BlogGrid blogs={seachedBlogs} sliceLimit={3} />
+                                <BlogGrid blogs={blogs} sliceLimit={3} />
                             )}
                         </AnimatePresence>
                     </div>

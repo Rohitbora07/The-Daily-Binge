@@ -138,10 +138,33 @@ export const userLogout = async (req, res) => {
         })
     } catch (err) {
         console.log(err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        })
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
+    }
+}
+
+export const userDelete = async (req, res) => {
+    const { userId } = req.userId
+    if (!userId) {
+        return res.status(400).json({ success: false, message: "No current User" })
+    }
+    try {
+        const user = await User.findById(userId)
+        if (!user) {
+            return res.status(400).json({ success: false, message: "User not found" })
+            if (user.profileImg) {
+                await cloudinary.uploader.destroy(user.profileImg);
+            }
+            await user.deleteOne();
+            await Blog.deleteMany({ author: id });
+            await Comment.deleteMany({ user: id });
+            await Bookmark.deleteMany({ user: id })
+            return res.status(200).json({ success: true, message: "User Deleted successfully" })
+
+        }
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
     }
 }
 
@@ -407,7 +430,7 @@ export const getUserProfile = async (req, res) => {
 
         const filter = { author: id };
 
-        if (userId.toString()  !== id) {
+        if (userId.toString() !== id) {
             filter.status = "published";
             filter.visibility = "public";
         }
@@ -416,7 +439,7 @@ export const getUserProfile = async (req, res) => {
             .select("title slug coverImage views likes commentsCount createdAt category tags")
             .populate("author", "name profileImg")
             .sort({ createdAt: -1 }).skip(skip).limit(limit)
-            
+
 
         const totalBlogs = await Blog.countDocuments(filter)
         const totalBookmarks = await Bookmark.countDocuments({ user: id })

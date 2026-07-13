@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowUpDown, ChevronDown, Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
-export default function BlogFilterBar({ sortBy, setSortBy, sortOptions, status, setStatus, statusOptions, isEmailVerified, setIsEmailVerified, emailVerificationOptions, thirdFilter }) {
+export default function FilterBar({ sortBy, setSortBy, sortOptions, status, setStatus, statusOptions, isEmailVerified, setIsEmailVerified, emailVerificationOptions, thirdFilter }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
 

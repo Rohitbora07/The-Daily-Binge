@@ -401,34 +401,73 @@ export const toggleLike = async (req, res) => {
 
 export const getPublishedByTimeBlogs = async (req, res) => {
     try {
-        const { range } = req.query
+        const { range, search, sort } = req.query
 
         const page = Number(req.query.page) || 1
         const limit = Number(req.query.limit) || 15
 
         const skip = (page - 1) * limit
 
-        let filter = {
-            status: "published",
-            visibility: "public"
+        let query = {
+            status: "published"
+        };
+
+        if (search) {
+            query.title = { $regex: search, $options: "i" }
         }
-        const now = Date.now()
+
+        let sortOption = { createdAt: -1 };
+
+        switch (sort) {
+            case "latest":
+                sortOption = { publishedAt: -1 }
+                break;
+            case "oldest":
+                sortOption = { publishedAt: 1 }
+                break;
+            case "views":
+                sortOption = { views: -1 };
+                break;
+            case "likes":
+                sortOption = { likes: -1 };
+                break;
+            case "bookmarks":
+                sortOption = { bookmarks: -1 };
+                break;
+            case "comments":
+                sortOption = { commentsCount: -1 };
+                break;
+            case "trending":
+                sortOption = { trendingScore: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
 
         if (range === "24h") {
-            filter.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
         }
 
         if (range === "yesterday") {
-            filter.publishedAt = { $gte: new Date(now - 2 * 24 * 60 * 60 * 1000) }
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+
+            query.publishedAt = {
+                $gte: yesterday,
+                $lt: today
+            };
         }
 
         if (range === "week") {
-            filter.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
         }
 
-        const totalBlogs = await Blog.countDocuments(filter)
+        const totalBlogs = await Blog.countDocuments(query)
 
-        const blogs = await Blog.find(filter).sort({ createdAt: -1 }).populate("author", "name email profileImg").skip(skip).limit(limit)
+        const blogs = await Blog.find(query).sort(sortOption).populate("author", "name email profileImg").skip(skip).limit(limit)
 
         return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
 
@@ -440,34 +479,66 @@ export const getPublishedByTimeBlogs = async (req, res) => {
 
 export const getTrendingBlogs = async (req, res) => {
     try {
-        const { range } = req.query
+        const { range, search, sort } = req.query
 
         const page = Number(req.query.page) || 1
         const limit = Number(req.query.limit) || 15
 
         const skip = (page - 1) * limit
 
-        let filter = {
-            status: "published",
-            visibility: "public",
-            trendingScore: { $gt: 0 }
+        let query = {
+            trendingScore: { $gt: 0 },
+            status: "published"
+        };
+
+        if (search) {
+            query.title = { $regex: search, $options: "i" }
         }
+
+        let sortOption = { createdAt: -1 };
+
+        switch (sort) {
+            case "latest":
+                sortOption = { publishedAt: -1 }
+                break;
+            case "oldest":
+                sortOption = { publishedAt: 1 }
+                break;
+            case "views":
+                sortOption = { views: -1 };
+                break;
+            case "likes":
+                sortOption = { likes: -1 };
+                break;
+            case "bookmarks":
+                sortOption = { bookmarks: -1 };
+                break;
+            case "comments":
+                sortOption = { commentsCount: -1 };
+                break;
+            case "trending":
+                sortOption = { trendingScore: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
+
         const now = Date.now()
 
 
         if (range === "24h") {
-            filter.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
         }
         if (range === "week") {
-            filter.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
         }
         if (range === "month") {
-            filter.publishedAt = { $gte: new Date(now - 30 * 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now - 30 * 24 * 60 * 60 * 1000) }
         }
 
-        const totalBlogs = await Blog.countDocuments(filter)
+        const totalBlogs = await Blog.countDocuments(query)
 
-        const blogs = await Blog.find(filter).sort({ trendingScore: -1 }).populate("author", "name email profileImg").skip(skip).limit(limit)
+        const blogs = await Blog.find(query).sort(sortOption).populate("author", "name email profileImg").skip(skip).limit(limit)
 
         return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
     } catch (err) {
