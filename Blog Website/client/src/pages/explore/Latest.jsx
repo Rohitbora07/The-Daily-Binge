@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "motion/react"; 
+import { motion } from "motion/react";
 import { GET_ALL_BLOGS } from "../../constants/route";
 import api from "../../api/axios";
 import BlogGrid from "../../components/BlogGrid";
@@ -8,6 +8,7 @@ import Pagination from "../../components/Pagination"
 import FilterBar from "../../components/general/FilterBar";
 import useDebounce from "../../hooks/useDebounce";
 import SearchBar from "../../components/SearchBar";
+import { Search } from "lucide-react";
 
 export default function Latest() {
     const [latestBlogs, setlatestBlogs] = useState([]);
@@ -75,35 +76,36 @@ export default function Latest() {
     };
 
     return (
-        <motion.div ref={contentRef} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-stone-50">
-            <section className="bg-white border-b border-stone-100">
-                <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6 sm:pt-12 sm:pb-8">
-                    <div className="mb-4">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full mb-4">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Live feed
-                        </span>
-                        <h1 className="font-serif text-3xl sm:text-5xl font-bold text-stone-900 mb-3">Fresh Stories</h1>
-                        <p className="text-stone-500 text-sm sm:text-base max-w-lg">Stay updated with our latest releases.</p>
+    <motion.div ref={contentRef} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-stone-50 mt-20">
+
+        <section className="bg-white border-b border-stone-100">
+            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6 sm:pt-12 sm:pb-8">
+                <div className="mb-4">
+
+                    <h1 className="font-serif text-3xl sm:text-5xl font-bold text-stone-900 mb-3">Fresh Stories</h1>
+                    <p className="text-stone-500 text-sm sm:text-base max-w-lg">Stay updated with our latest releases.</p>
+                </div>
+            </div>
+        </section>
+
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+            <div className="flex flex-col lg:flex-row gap-10 items-start w-full">
+                
+
+                <div className="flex-1 w-full min-w-0 space-y-8">
+                    <div className="space-y-4">
+                        <SearchBar value={searchTerm} setVal={setSearchTerm} />
+                        <FilterBar
+                            sortBy={sortBy}
+                            setSortBy={setSortBy}
+                            sortOptions={sortOptions}
+                            status={period}
+                            setStatus={setPeriod}
+                            statusOptions={timePeriod}
+                        />
                     </div>
-                </div>
-            </section>
 
-            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
-                <div className="space-y-4">
-                    <SearchBar value={searchTerm} setVal={setSearchTerm} />
-                    <FilterBar
-                        sortBy={sortBy}
-                        setSortBy={setSortBy}
-                        sortOptions={sortOptions}
-                        status={period}
-                        setStatus={setPeriod}
-                        statusOptions={timePeriod}
-                    />
-                </div>
-
-                <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
-                    <div className="flex-1 w-full min-w-0">
+                    <div className="w-full">
                         {loading ? (
                             <div className="w-full flex items-center justify-center py-24 bg-white rounded-2xl border border-stone-200/60 shadow-sm">
                                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0077CC]"></div>
@@ -113,9 +115,7 @@ export default function Latest() {
                         ) : (
                             <div className="w-full text-center py-16 sm:py-24 px-4 bg-white rounded-2xl border border-stone-200/60 shadow-sm flex flex-col items-center justify-center">
                                 <div className="text-stone-300 mb-3">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-                                    </svg>
+                                    <Search size={30} />
                                 </div>
                                 <h3 className="text-stone-800 font-medium text-base mb-1">No Articles Found</h3>
                                 <p className="text-stone-400 text-xs sm:text-sm max-w-xs leading-relaxed">
@@ -127,21 +127,28 @@ export default function Latest() {
                         )}
                     </div>
 
-                    <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0 sticky top-24">
-                        <BlogSidebar tags={tags} categoryMap={categoryMap} authors={latestAuthors} title="Latest" />
-                    </aside>
+                    {!loading && latestBlogs.length > 0 && (
+                        <div className="pt-6 border-t border-stone-100">
+                            <Pagination
+                                currentPage={page}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
+                            />
+                        </div>
+                    )}
                 </div>
 
-                {!loading && latestBlogs.length > 0 && (
-                    <div className="pt-4 border-t border-stone-100">
-                        <Pagination
-                            currentPage={page}
-                            totalPages={totalPages}
-                            onPageChange={handlePageChange}
-                        />
-                    </div>
-                )}
+                <div className="w-full lg:w-72 xl:w-80 flex-shrink-0 lg:sticky lg:top-8">
+                    <BlogSidebar
+                        tags={tags}
+                        categoryMap={categoryMap}
+                        authors={latestAuthors}
+                        title="Latest"
+                    />
+                </div>
+                
             </div>
-        </motion.div>
-    );
+        </div>
+    </motion.div>
+);
 }

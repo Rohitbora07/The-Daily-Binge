@@ -453,9 +453,67 @@ export const getUserProfile = async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        return res.status(500).json({ success: false, message: error.message });
     }
 };
+
+export const getAllUsers = async (req, res) => {
+    try {
+        const page = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || 15
+
+        const skip = (page - 1) * limit
+
+        const { search, sort } = req.query;
+
+        let query = {
+            // status: "active",
+            totalBlogs: { $gt: 0 },
+            role: { $ne: "admin" }
+        };
+
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { email: { $regex: search, $options: "i" } }
+            ]
+        }
+
+        let sortOption = { createdAt: -1 };
+
+        switch (sort) {
+            case "latest":
+                sortOption = { createdAt: -1 };
+                break;
+            case "oldest":
+                sortOption = { createdAt: 1 };
+                break;
+            case "totalViews":
+                sortOption = { totalViews: -1 };
+                break;
+            case "totalLikes":
+                sortOption = { totalLikes: -1 };
+                break;
+            case "totalBlogs":
+                sortOption = { totalBlogs: -1 };
+                break;
+            case "totalComments":
+                sortOption = { commentsCount: -1 };
+                break;
+            case "totalBookmarks":
+                sortOption = { totalBookmarks: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
+
+
+        const totalUsers = await User.countDocuments(query)
+
+        const users = await User.find(query).sort(sortOption).select("-password -VerificationOtp -emailOtpExpiry -passResetOtp -passResetOtpExpiry").skip(skip).limit(limit)
+        return res.status(200).json({ success: true, users, totalUsers, currentPage: page, totalPages: Math.ceil(totalUsers / limit) })
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}

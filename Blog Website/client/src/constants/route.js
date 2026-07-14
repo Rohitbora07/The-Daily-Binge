@@ -4,12 +4,13 @@ export const SIGNUP_ROUTE = "/user/register"
 export const CURRENT_USER_ROUTE = "/user/me"
 export const UPDATE_PROFILE_ROUTE = "/user/update-profile"
 export const USER_DETAIL_ROUTE = (id) => `/user/profile/${id}`
+export const ALL_USERS_ROUTE = "/user/all-users"
 
 export const CREATE_BLOG = "/blog/create"
-export const GET_ALL_ADMIN_BLOGS = "/blog/admin/all"
 export const GET_ALL_BLOGS = "/blog/published/all-blogs"
 export const UPLOAD_IMAGE = "/blog/upload-image"
 export const TRENDING_BLOGS = "/blog/trending"
+export const FEATURED_BLOGS = "/blog/featured"
 export const VIEW_INC = (id) => `/blog/${id}/view`
 export const LIKE_BLOG = (blogId) => `/blog/${blogId}/like`
 export const BLOGS_BY_CATEGORY = (category) => `/blog/category/${category}`

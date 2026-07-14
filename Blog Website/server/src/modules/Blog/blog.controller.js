@@ -108,64 +108,6 @@ export const getUserBlogs = async (req, res) => {
     }
 }
 
-export const getAllBlogs = async (req, res) => {
-    try {
-        const page = Number(req.query.page) || 1
-        const limit = Number(req.query.limit) || 15
-
-        const skip = (page - 1) * limit
-
-        const {search, sort, category} = req.query
-
-        let query = {};
-
-        if(search){
-            query.title = { $regex: search, $options: "i" }
-        }
-
-        if(category){
-            query.category = category
-        }
-
-        let sortOption = { createdAt: -1 };
-
-        switch(sort){
-            case "latest" :
-                sortOption = { publishedAt: -1 };
-                break;
-            case "oldest" :
-                sortOption = { publishedAt: 1 };
-                break;
-            case "views" :
-                sortOption = { views: -1 };
-                break;
-            case "likes" : 
-                sortOption = { likes: -1 };
-                break;
-            case "trending":
-                sortOption = { trendingScore: -1 };
-                break;
-            default:
-                sortOption = { createdAt: -1 };
-        }
-
-        const totalBlogs = await Blog.countDocuments(query)
-
-        const blogs = await Blog.find(query).sort(sortOption).populate("author", "name email profileImg").skip(skip).limit(limit)
-
-        if(blogs.length === 0) {
-            return res.status(404).json({ success: false, message: "No blogs found" })
-        }
-
-        return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
-    } catch (err) {
-        console.log("Error:", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        })
-    }
-}
 
 export const getSingleBlog = async (req, res) => {
     const { slug } = req.params
@@ -292,20 +234,80 @@ export const getBlogsByCategory = async (req, res) => {
     }
     try {
 
-        const filter = {
-            category,
-            status: "published",
-            visibility: "public"
-        }
+        const { range, search, sort } = req.query
 
         const page = Number(req.query.page) || 1
         const limit = Number(req.query.limit) || 15
 
         const skip = (page - 1) * limit
 
-        const totalBlogs = await Blog.countDocuments(filter)
+        let query = {
+            status: "published",
+            category: category.toLowerCase()
+        };
 
-        const blogs = await Blog.find(filter).sort({ createdAt: -1 }).populate("author", "name email profileImg").skip(skip).limit(limit)
+        if (search) {
+            query.title = { $regex: search, $options: "i" }
+        }
+
+        let sortOption = { createdAt: -1 };
+
+        switch (sort) {
+            case "latest":
+                sortOption = { publishedAt: -1 }
+                break;
+            case "oldest":
+                sortOption = { publishedAt: 1 }
+                break;
+            case "views":
+                sortOption = { views: -1 };
+                break;
+            case "likes":
+                sortOption = { likes: -1 };
+                break;
+            case "bookmarks":
+                sortOption = { bookmarks: -1 };
+                break;
+            case "comments":
+                sortOption = { commentsCount: -1 };
+                break;
+            case "trending":
+                sortOption = { trendingScore: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
+
+        const now = new Date();
+
+        if (range === "24h") {
+            query.publishedAt = { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) }
+        }
+
+        if (range === "yesterday") {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+
+            query.publishedAt = {
+                $gte: yesterday,
+                $lt: today
+            };
+        }
+
+        if (range === "week") {
+            query.publishedAt = { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) }
+        }
+
+        const totalBlogs = await Blog.countDocuments(query)
+
+        const blogs = await Blog.find(query).sort(sortOption).populate("author", "name email profileImg").skip(skip).limit(limit)
+
+        return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
+
+
 
         if (blogs.length === 0) {
             return res.status(404).json({ success: false, message: "No blogs found for this category" })
@@ -315,10 +317,7 @@ export const getBlogsByCategory = async (req, res) => {
         return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit), message: `Blogs for category ${category} fetched successfully` })
     } catch (err) {
         console.log("Error:", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        })
+        return res.status(500).json({success: false,message: "Internal Server Error" })
     }
 }
 
@@ -441,11 +440,13 @@ export const getPublishedByTimeBlogs = async (req, res) => {
                 sortOption = { trendingScore: -1 };
                 break;
             default:
-                sortOption = { createdAt: -1 };
+                sortOption = { publishedAt: -1 };
         }
 
+        const now = new Date();
+
         if (range === "24h") {
-            query.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) }
         }
 
         if (range === "yesterday") {
@@ -462,7 +463,7 @@ export const getPublishedByTimeBlogs = async (req, res) => {
         }
 
         if (range === "week") {
-            query.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) }
         }
 
         const totalBlogs = await Blog.countDocuments(query)
@@ -520,20 +521,20 @@ export const getTrendingBlogs = async (req, res) => {
                 sortOption = { trendingScore: -1 };
                 break;
             default:
-                sortOption = { createdAt: -1 };
+                sortOption = { publishedAt: -1 };
         }
 
-        const now = Date.now()
+        const now = new Date();
 
 
         if (range === "24h") {
-            query.publishedAt = { $gte: new Date(now - 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) }
         }
         if (range === "week") {
-            query.publishedAt = { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) }
         }
         if (range === "month") {
-            query.publishedAt = { $gte: new Date(now - 30 * 24 * 60 * 60 * 1000) }
+            query.publishedAt = { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) }
         }
 
         const totalBlogs = await Blog.countDocuments(query)
@@ -543,9 +544,78 @@ export const getTrendingBlogs = async (req, res) => {
         return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
     } catch (err) {
         console.log("Error:", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        })
+        return res.status(500).json({success: false,message: "Internal Server Error"})
+    }
+}
+
+export const getFeaturedBlogs = async (req, res) => {
+    try{
+        const { range, search, sort } = req.query
+
+        const page = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || 15
+
+        const skip = (page - 1) * limit
+
+        let query = {
+            status: "published",
+            isFeatured: true
+        };
+
+        if (search) {
+            query.title = { $regex: search, $options: "i" }
+        }
+
+        let sortOption = { createdAt: -1 };
+
+        switch (sort) {
+            case "latest":
+                sortOption = { publishedAt: -1 }
+                break;
+            case "oldest":
+                sortOption = { publishedAt: 1 }
+                break;
+            case "views":
+                sortOption = { views: -1 };
+                break;
+            case "likes":
+                sortOption = { likes: -1 };
+                break;
+            case "bookmarks":
+                sortOption = { bookmarks: -1 };
+                break;
+            case "comments":
+                sortOption = { commentsCount: -1 };
+                break;
+            case "trending":
+                sortOption = { trendingScore: -1 };
+                break;
+            default:
+                sortOption = { publishedAt: -1 };
+        }
+
+        const now = new Date();
+
+
+        if (range === "week") {
+            query.publishedAt = { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) }
+        }
+        if (range === "month") {
+            query.publishedAt = { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) }
+        }
+
+        if(range === "year") {
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            query.publishedAt = { $gte: startOfYear }
+        }
+
+        const totalBlogs = await Blog.countDocuments(query)
+
+        const blogs = await Blog.find(query).sort(sortOption).populate("author", "name email profileImg").skip(skip).limit(limit)
+
+        return res.status(200).json({ success: true, blogs, totalBlogs, currentPage: page, totalPages: Math.ceil(totalBlogs / limit) })
+    }catch (err) {
+        console.log("Error:", err);
+        return res.status(500).json({success: false,message: "Internal Server Error"})
     }
 }

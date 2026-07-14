@@ -26,6 +26,7 @@ import AdminBlogDetails from './pages/admin/BlogManager/BlogOperations'
 import AdminUserDetailPage from './pages/admin/AdminUserDetailPage'
 import AdminAllUsers from './pages/admin/AdminAllUser'
 import UserAllBlogs from './pages/admin/UserAllBlogs' 
+import Users from './pages/explore/Users'
 function App() {
   const location = useLocation()
   const hideLayout = ["/sign-in", "/sign-up","my-blogs"].includes(location.pathname);
@@ -48,6 +49,7 @@ function App() {
       <Route path='/explore' element={<Explore />} />
       <Route path='/explore/latest' element={<Latest />} />
       <Route path='/explore/trending' element={<Trending />} />
+      <Route path="/explore/authors" element={<Users />} />
       <Route path='/explore/editor-pick' element={<EditorPick />} />
       <Route path="/explore/category" element={<Category />} />
       <Route path="/explore/category/:category" element={<BlogByCategory />} />

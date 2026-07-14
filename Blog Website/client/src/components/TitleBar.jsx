@@ -3,20 +3,26 @@ import { useNavigate } from "react-router-dom"
 function TitleBar({ Icon, title, destination }) {
     const navigate = useNavigate()
     return (
-        <div className="flex items-center justify-between my-8 pb-4 border-b border-stone-200/60">
-            <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg border border-stone-300 flex items-center justify-center bg-stone-50/50">
-                    <Icon size={13} className="text-[#0077CC]" />
+        <div className="flex items-center justify-between mt-10 mb-6 pb-4 border-b border-stone-200/80">
+            <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl border border-stone-200/80 flex items-center justify-center bg-white shadow-sm text-[#0077CC]">
+                    <Icon size={15} />
                 </div>
-                <h2 className="text-xl font-serif font-medium tracking-tight text-stone-900">{title}</h2>
+                <h2 className="text-lg md:text-xl font-serif font-semibold tracking-tight text-stone-900">
+                    {title}
+                </h2>
             </div>
 
-            <div
+            <button
                 onClick={() => navigate(destination)}
-                className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider py-2 px-3 rounded-3xl text-[#0077CC] hover:text-[#014c81] hover:bg-[#3c8ec8] transition-colors"
+                className="group flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider py-2 px-4 rounded-full text-[#0077CC] bg-[#0077CC]/5 hover:bg-[#0077CC] hover:text-white active:scale-95 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
             >
-                View all <ArrowRight size={13} />
-            </div>
+                <span>View all</span>
+                <ArrowRight 
+                    size={14} 
+                    className="transition-transform duration-200 group-hover:translate-x-1" 
+                />
+            </button>
         </div>
     )
 }

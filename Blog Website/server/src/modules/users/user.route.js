@@ -1,5 +1,5 @@
 import express from "express"
-import { getCurrentUser, passReset, resetOtp, sendVerifyOtp, userLogin, userLogout, userRegister, verifyEmail, updateUserProfile, getUserProfile, userDelete } from "./user.controller.js"
+import { getCurrentUser, passReset, resetOtp, sendVerifyOtp, userLogin, userLogout, userRegister, verifyEmail, updateUserProfile, getUserProfile, userDelete, getAllUsers } from "./user.controller.js"
 import { userAuth } from "../../middlewares/user.auth.js"
 import upload from "../../middlewares/upload.js"
 import { getUserBlogs } from "../Blog/blog.controller.js"
@@ -20,5 +20,7 @@ userRouter.get("/me", userAuth, getCurrentUser)
 userRouter.put("/update-profile", userAuth, upload.fields([{ name: "profileImg", maxCount: 1 }, { name: "backgroundImg", maxCount: 1 }]), updateUserProfile)
 userRouter.get("/:userId/blogs", userAuth, getUserBlogs)
 userRouter.get("/profile/:id", userAuth, getUserProfile)
+userRouter.get("/all-users", userAuth, getAllUsers)
+
 
 export default userRouter

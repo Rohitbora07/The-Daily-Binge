@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 
 const categories = ["Accessibility", "Animation", "Architecture", "Artificial Intelligence", "Branding", "Business", "Career", "CSS", "Culture", "Data Science", "Design", "Design Systems", "Developer Experience", "Education", "Engineering", "Finance", "Freelancing", "Future of Work", "GraphQL", "Growth", "Health", "History", "JavaScript", "Leadership", "Lifestyle", "Mental Health", "Mobile", "Music", "Next.js", "Node.js", "Open Source", "Opinion", "Performance", "Philosophy", "Photography", "Productivity", "React", "Remote Work", "Science", "Security", "Startups", "Sustainability", "Tailwind CSS", "Technology", "Travel", "TypeScript", "UI Design", "UX Research", "Venture Capital", "Video", "Web Development", "Web3", "Writing"];
 
-/* Group by first letter */
 const grouped = categories.reduce((acc, cat) => {
     const letter = cat[0].toUpperCase();
     if (!acc[letter]) acc[letter] = [];

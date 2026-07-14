@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "motion/react";
-import { Flame } from "lucide-react";
+import { Flame, Search, TrendingUp } from "lucide-react";
 import FeaturedBlog from "../../components/FeaturedBlog"
 import TrendingSidebar from "../../components/trending/TrendingSidebar";
 import { useEffect, useRef, useState } from "react";
@@ -8,94 +8,87 @@ import { TRENDING_BLOGS } from "../../constants/route";
 import BlogStripeList from "../../components/BlogStripeList";
 import BlogSidebar from "../../components/blog/BlogSidebar";
 import Pagination from "../../components/Pagination"
+import FilterBar from "../../components/general/FilterBar";
+import useDebounce from "../../hooks/useDebounce";
+import SearchBar from "../../components/SearchBar";
 
-
-const periods = ["Today", "This Week", "This Month"];
 
 function Trending() {
-    const [period, setPeriod] = useState("Today");
 
-    const [todayTrendingBlogs, setTodayTrendingBlogs] = useState([])
-    const [weeklyTrendingBlogs, setWeeklyTrendingBlogs] = useState([])
-    const [monthlyTrendingBlogs, setMonthlyTrendingBlogs] = useState([])
-    const [loading, setLoading] = useState(true)
+    const [trendingBlogs, setTrendingBlogs] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const [page, setPage] = useState(1)
+    const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [monthlyPage, setMonthlyPage] = useState(1)
-    const [totalmonthlyPages, setTotalMonthlyPages] = useState(1)
-    const [weeklyPage, setweeklyPage] = useState(1)
-    const [totalWeeklyPage, setTotalWeeklyPage] = useState(1)
 
-    const currentBlogs = period === "Today" ? todayTrendingBlogs : period === "This Week" ? weeklyTrendingBlogs : monthlyTrendingBlogs
-    const currentPage = period === "Today" ? page : period === "This Week" ? weeklyPage : monthlyPage
-    const currentTotalPages = period === "Today" ? totalPages : period === "This Week" ? totalWeeklyPage : totalmonthlyPages
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 500);
+    const [period, setPeriod] = useState("24h");
+    const [sortBy, setSortBy] = useState("trending");
 
+    const sortOptions = [
+        { title: "Sort by Latest", value: "latest" },
+        { title: "Sort by Oldest", value: "oldest" },
+        { title: "Sort by Views", value: "views" },
+        { title: "Sort by Likes", value: "likes" },
+        { title: "Sort by Trending", value: "trending" },
+        { title: "Sort by Bookmarks", value: "bookmarks" },
+        { title: "Sort by Comments", value: "comments" }
+    ];
 
-    const contentRef = useRef(null)
+    const timePeriod = [
+        { title: "Today", value: "24h" },
+        { title: "This Week", value: "week" },
+        { title: "This Month", value: "month" },
+    ];
+
+    const contentRef = useRef(null);
 
     useEffect(() => {
-        const getTredingBlogs = async () => {
-            setLoading(true)
+        const getAll = async () => {
             try {
-
-                const { data } = await api.get(`${TRENDING_BLOGS}?range=24h&page=${page}&limit=5`)
-                const { data: weeklyData } = await api.get(`${TRENDING_BLOGS}?range=week&page=${weeklyPage}&limit=5`)
-                const { data: monthlyData } = await api.get(`${TRENDING_BLOGS}?range=month&page=${monthlyPage}&limit=5`)
-
-                setTodayTrendingBlogs(data.blogs || [])
-                setWeeklyTrendingBlogs(weeklyData.blogs || [])
-                setMonthlyTrendingBlogs(monthlyData.blogs || [])
-
-                setTotalPages(data.totalPages)
-                setTotalWeeklyPage(weeklyData.totalPages)
-                setTotalMonthlyPages(monthlyData.totalPages)
-
+                setLoading(true);
+                const { data } = await api.get(`${TRENDING_BLOGS}?range=${period}&page=${page}&limit=10&sort=${sortBy}&search=${debouncedSearch}`);
+                setTrendingBlogs(data.blogs || []);
+                setTotalPages(data.totalPages || 1);
             } catch (error) {
-                console.log(error)
+                console.log(error);
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
-        }
-        getTredingBlogs()
-    }, [page, monthlyPage, weeklyPage])
+        };
+        getAll();
+    }, [page, period, sortBy, debouncedSearch]);
 
-    const tags = currentBlogs ? [...new Set(currentBlogs.map(blog => blog.tags).flat())].slice(0, 20) : []
-    const trendingAuthors = currentBlogs ? [... new Map(currentBlogs.map(blog => [blog.author._id, blog.author])).values()] : []
 
-    const categoryMap = new Map()
-    if (currentBlogs) {
-        for (const item of currentBlogs) {
+    const tags = trendingBlogs ? [...new Set(trendingBlogs.map(blog => blog.tags).flat())].slice(0, 20) : [];
+    const trendingAuthors = trendingBlogs ? [...new Map(trendingBlogs.map(blog => [blog?.author?._id, blog?.author])).values()].filter(Boolean) : [];
+
+    const categoryMap = new Map();
+    if (trendingBlogs) {
+        for (const item of trendingBlogs) {
             const categ = item.category;
-            categoryMap.set(categ, (categoryMap.get(categ) || 0) + 1)
+            if (categ) categoryMap.set(categ, (categoryMap.get(categ) || 0) + 1);
         }
     }
 
     const handlePageChange = (newPage) => {
-        if (period === "Today") setPage(newPage)
-        else if (period === "This Week") setweeklyPage(newPage)
-        else  setMonthlyPage(newPage)
+        setPage(newPage);
         if (contentRef.current) {
             contentRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
         }
-    }
+    };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0077CC]"></div>
-            </div>
-        );
-    }
+
+
 
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.35 }}
-            className="min-h-screen bg-stone-50"
+            className="min-h-screen bg-stone-50 mt-20"
         >
-            {/* ── Hero section ── */}
             <section className="bg-white border-b border-stone-100">
                 <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 pt-12 sm:pt-16 pb-0">
                     <motion.div
@@ -115,42 +108,15 @@ function Trending() {
                             Discover the stories readers are loving right now.
                         </p>
                     </motion.div>
-
-                    {/* Period switcher — sticky */}
-                    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-t border-stone-100 -mx-4 sm:-mx-6 lg:-mx-10">
-                        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10">
-                            <div className="flex items-center overflow-x-auto scrollbar-hide">
-                                {periods.map((p) => (
-                                    <button
-                                        key={p}
-                                        onClick={() => setPeriod(p)}
-                                        className={`relative flex-shrink-0 px-5 sm:px-6 py-3.5 text-sm font-medium transition-colors duration-200 whitespace-nowrap ${period === p ? "text-[#0077CC]" : "text-stone-500 hover:text-stone-800"
-                                            }`}
-                                    >
-                                        {p}
-                                        {period === p && (
-                                            <motion.div
-                                                layoutId="period-underline"
-                                                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0077CC] rounded-full"
-                                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                                            />
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </section>
 
-            {/* ── Body ── */}
-            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
-                <div className="flex gap-8 xl:gap-12 items-start">
+            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
-                    {/* Main feed */}
-                    <div className="flex-1 min-w-0 space-y-8">
+                <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
 
-                        {/* Top 3 hero cards */}
+                    <div className="flex-1 w-full min-w-0 space-y-6 sm:space-y-8">
+
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={period + "-hero"}
@@ -160,74 +126,69 @@ function Trending() {
                                 transition={{ duration: 0.22 }}
                                 className="space-y-4 sm:space-y-5"
                             >
-                                {currentBlogs.length > 0 && (
+                                {trendingBlogs.length > 0 && (
                                     <FeaturedBlog
-                                        blog={currentBlogs[0]}
-                                        title="Most Popular"
+                                        blog={trendingBlogs[0]}
+                                        title="Trending Now"
+                                        Icon={TrendingUp}
                                     />
                                 )}
                             </motion.div>
                         </AnimatePresence>
 
-                        {/* Divider */}
-                        {
-                            currentBlogs.length > 0 &&
-                             <div className="flex items-center gap-4">
-                            <div className="flex-1 h-px bg-stone-200" />
-                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest whitespace-nowrap">
-                                Leaderboard
-                            </span>
-                            <div className="flex-1 h-px bg-stone-200" />
-                        </div>
-                        }
-                        
-
-                        {/* Leaderboard #4+ */}
-                        <AnimatePresence mode="wait">
-                            {currentBlogs.length > 0 ? (
-                                <BlogStripeList blogs={currentBlogs} />
-                            ) : (
-                                <div className="text-center py-12 text-stone-400">No stories found matching the active criteria.</div>
-                            )}
-                            <Pagination currentPage={currentPage}
-                                totalPages={currentTotalPages}
-                                onPageChange={handlePageChange}
+                        <div className="space-y-4">
+                            <SearchBar value={searchTerm} setVal={setSearchTerm} />
+                            <FilterBar
+                                sortBy={sortBy}
+                                setSortBy={setSortBy}
+                                sortOptions={sortOptions}
+                                status={period}
+                                setStatus={setPeriod}
+                                statusOptions={timePeriod}
                             />
-                        </AnimatePresence>
-
-                        {/* Sidebar on tablet/mobile — renders below feed */}
-                        <div className="lg:hidden">
-                            <TrendingSidebar />
                         </div>
 
-                        {/* Bottom CTA
-                        <motion.div
-                            initial={{ opacity: 0, y: 16 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.45 }}
-                            className="bg-[#0D1B2A] rounded-2xl px-6 sm:px-10 py-10 sm:py-12 text-center"
-                        >
-                            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-2">
-                                Explore More Stories
-                            </h2>
-                            <p className="text-stone-400 text-sm max-w-sm mx-auto mb-7 leading-relaxed">
-                                You've seen today's trending stories. Discover everything in our blog.
-                            </p>
-                            <motion.button
-                                whileHover={{ scale: 1.03, y: -1 }}
-                                whileTap={{ scale: 0.97 }}
-                                className="inline-flex items-center gap-2 bg-[#0077CC] hover:bg-[#005FA3] text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors"
-                            >
-                                View All Articles
-                                <ArrowRight size={14} />
-                            </motion.button>
-                        </motion.div> */}
+                        <div className="w-full">
+                            {loading ? (
+                                <div className="w-full flex items-center justify-center py-24 bg-white rounded-2xl border border-stone-200/60 shadow-sm">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0077CC]"></div>
+                                </div>
+                            ) : trendingBlogs.length > 0 ? (
+                                <div className="space-y-6">
+                                    <span className="text-lg font-bold flex items-center text-stone-800">Leaderboard</span>
+                                    <BlogStripeList blogs={trendingBlogs.slice(1)} />
+                                </div>
+                            ) : (
+                                <div className="w-full text-center py-16 sm:py-24 px-4 bg-white rounded-2xl border border-stone-200/60 shadow-sm flex flex-col items-center justify-center">
+                                    <div className="text-stone-300 mb-3">
+                                        <Search size={22} />
+                                    </div>
+                                    <h3 className="text-stone-800 font-medium text-base mb-1">No Articles Found</h3>
+                                    <p className="text-stone-400 text-xs sm:text-sm max-w-xs leading-relaxed">
+                                        {searchTerm
+                                            ? `No latest articles match "${searchTerm}". Try tweaking your keywords.`
+                                            : `We couldn't find any articles published within this time frame (${period}).`}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {!loading && trendingBlogs.length > 0 && (
+                            <div className="pt-4 border-t border-stone-100">
+                                <Pagination
+                                    currentPage={page}
+                                    totalPages={totalPages}
+                                    onPageChange={handlePageChange}
+                                />
+                            </div>
+                        )}
+
                     </div>
 
-                    <div className="hidden lg:block w-72 xl:w-80 flex-shrink-0 sticky top-16">
+                    <div className="w-full lg:w-72 xl:w-80 flex-shrink-0 lg:sticky lg:top-24">
                         <BlogSidebar tags={tags} categoryMap={categoryMap} authors={trendingAuthors} title="Trending" />
                     </div>
+
                 </div>
             </div>
         </motion.div>
