@@ -1,82 +1,110 @@
 import Hero from './Hero'
-import Sidebar from './SideBar'
+import Sidebar from './Sidebar'
 import FeaturedBlog from './FeaturedBlog'
 import BlogGrid from './BlogGrid'
 import TrendingBlogs from './TrendingBlogs'
 import { useEffect, useState } from 'react'
 import api from '../api/axios'
-import { GET_ALL_BLOGS } from '../constants/route'
-import { Globe, ArrowRight } from "lucide-react"
+import { GET_ALL_BLOGS, FEATURED_BLOGS, TRENDING_BLOGS } from '../constants/route'
+import { Clock10Icon, ArrowRight, Star, TrendingUp } from "lucide-react"
 import { useNavigate } from 'react-router-dom'
+import TitleBar from './TitleBar'
 
 function Home() {
-
-    const [blogs, setBlogs] = useState(null)
+    const [blogs, setBlogs] = useState([])
+    const [featuredBlogs, setFeaturedBlogs] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [trendingBlogs, setTrendingBlogs] = useState([])
     const navigate = useNavigate()
 
     useEffect(() => {
         const getAll = async () => {
             try {
+                setLoading(true)
                 const { data } = await api.get(GET_ALL_BLOGS)
-                console.log("data", data)
+                const { data: featuredData } = await api.get(`${FEATURED_BLOGS}?limit=1`)
+                const { data: trendingData } = await api.get(`${TRENDING_BLOGS}?limit=3`)
+                setFeaturedBlogs(featuredData.blogs)
+                setTrendingBlogs(trendingData.blogs)
                 setBlogs(data.blogs)
             } catch (error) {
                 console.log(error)
+            } finally {
+                setLoading(false)
             }
         }
         getAll()
     }, [])
 
-    if (!blogs) {
-        return (
-            <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0077CC]"></div>
-            </div>
-        );
+    const tags = blogs ? [...new Set(blogs.map(blog => blog.tags).flat())].slice(0, 20) : [];
+    const categoryMap = new Map();
+    if (blogs) {
+        for (const item of blogs) {
+            const categ = item.category;
+            if (categ) categoryMap.set(categ, (categoryMap.get(categ) || 0) + 1);
+        }
     }
+    const featuredAuthors = blogs ? [...new Map(blogs.map(blog => [blog?.author?._id, blog?.author])).values()].filter(Boolean) : [];
+
+    const sortedCategories = [...categoryMap.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 12)
+        .map(([name, count]) => ({ name, count }));
 
     return (
         <div className="min-h-screen bg-[#F4F7FB] font-sans antialiased text-stone-900">
-
-
-
             <main>
-                <Hero blogs={blogs} />
+                <Hero blogs={blogs} loading={loading} />
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-stone-200/60">
-                    <div className="flex flex-col lg:flex-row gap-12 xl:gap-16 items-start">
-
-                        <div className="w-full lg:w-72 xl:w-80 shrink-0 order-2 lg:order-1 sticky top-28">
-                            <Sidebar />
-                        </div>
-                        <div className="flex-1 min-w-0 order-1 lg:order-2 space-y-12">
-                            <FeaturedBlog blog={blogs[0]} />
-                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-stone-200/60">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-7 h-7 rounded-lg border border-stone-300 flex items-center justify-center bg-stone-50/50">
-                                        <Globe size={13} className="text-[#0077CC]" />
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16 border-t border-stone-200/60">
+                    <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 xl:gap-16 items-start">
+                        
+                        <div className="w-full flex-1 min-w-0 order-1 lg:order-2 space-y-8 md:space-y-12">
+                            {loading ? (
+                                <div className="space-y-8 md:space-y-12">
+                                    <div className="w-full h-96 bg-stone-200 animate-pulse rounded-xl" />
+                                    <div className="w-48 h-8 bg-stone-200 animate-pulse rounded" />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {[...Array(4)].map((_, i) => (
+                                            <div key={i} className="h-64 bg-stone-200 animate-pulse rounded-xl" />
+                                        ))}
                                     </div>
-                                    <h2 className="text-xl font-serif font-medium tracking-tight text-stone-900">Latest Articles</h2>
                                 </div>
+                            ) : (
+                                <>
+                                    {featuredBlogs && featuredBlogs.length > 0 && (
+                                        <FeaturedBlog blog={featuredBlogs[0]} Icon={Star} title={"Featured Blog"} />
+                                    )}
+                                    
+                                    <div className="space-y-6">
+                                        <TitleBar title={"Latest Blogs"} Icon={Clock10Icon} onClick={() => navigate("/explore/latest")} />
+                                        <BlogGrid blogs={blogs} sliceLimit={6} />
+                                    </div>
 
-                                <div
-                                    onClick={()=> navigate("/explore/latest")}
-                                    className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider py-2 px-3 rounded-3xl text-[#0077CC] hover:text-[#014c81] hover:bg-[#3c8ec8] transition-colors"
-                                >
-                                    View all <ArrowRight size={13} />
+                                    <div className="space-y-6">
+                                        <TitleBar title={"Trending Blogs"} Icon={TrendingUp} onClick={() => navigate("/explore/trending")} />
+                                        <BlogGrid blogs={trendingBlogs} />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="w-full lg:w-72 xl:w-80 shrink-0 order-2 lg:order-1 lg:sticky lg:top-28">
+                            {loading ? (
+                                <div className="space-y-6">
+                                    <div className="h-48 bg-stone-200 animate-pulse rounded-xl" />
+                                    <div className="h-64 bg-stone-200 animate-pulse rounded-xl" />
                                 </div>
-                            </div>
-                            <BlogGrid blogs={blogs} />
-                            <TrendingBlogs blogs={blogs} />
+                            ) : (
+                                <Sidebar categories={sortedCategories} tags={tags} authors={featuredAuthors} />
+                            )}
                         </div>
 
                     </div>
                 </div>
             </main>
-
-
         </div>
     )
 }
 
-export default Home
+export default Home;

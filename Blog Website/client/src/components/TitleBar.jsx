@@ -8,7 +8,7 @@ function TitleBar({ Icon, title, destination }) {
                 <div className="w-9 h-9 rounded-xl border border-stone-200/80 flex items-center justify-center bg-white shadow-sm text-[#0077CC]">
                     <Icon size={15} />
                 </div>
-                <h2 className="text-lg md:text-xl font-serif font-semibold tracking-tight text-stone-900">
+                <h2 className="text-lg md:text-xl font-serif font-medium tracking-tight text-stone-900">
                     {title}
                 </h2>
             </div>
