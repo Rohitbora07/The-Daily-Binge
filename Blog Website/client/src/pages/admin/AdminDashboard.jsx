@@ -18,10 +18,10 @@ const statusStyles = {
 };
 
 const quickActions = [
-    { icon: User2, label: "View All Users", color: "#EF4444", bg: "#FEE2E2" },
-    { icon: FileText, label: "View All Blogs", color: "#7c3aed", bg: "#f5f3ff" },
-    { icon: File, label: "View Trending Blogs", color: "#EF4444", bg: "#FEE2E2" },
-    { icon: Clock, label: "View Recent Blogs", color: "#f59e0b", bg: "#f1f5f9" },
+    { icon: User2, label: "View All Users", color: "#EF4444", bg: "#FEE2E2", path: "/admin/users" },
+    { icon: FileText, label: "View All Blogs", color: "#7c3aed", bg: "#f5f3ff", path: "/admin/blogs" },
+    { icon: File, label: "View Trending Blogs", color: "#EF4444", bg: "#FEE2E2", path: "/admin/blogs/trending" },
+    { icon: Clock, label: "View Recent Blogs", color: "#f59e0b", bg: "#f1f5f9", path: "/admin/blogs/latest" },
 ];
 
 export default function AdminDashboard() {
@@ -112,11 +112,12 @@ export default function AdminDashboard() {
                 >
                     <h2 className="text-sm font-semibold text-stone-800 mb-4">Quick actions</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-                        {quickActions.map(({ icon: Icon, label, color, bg }) => (
+                        {quickActions.map(({ icon: Icon, label, color, bg, path }) => (
                             <motion.button
                                 key={label}
                                 whileHover={{ scale: 1.02, y: -1 }}
                                 whileTap={{ scale: 0.98 }}
+                                onClick={() => navigate(path)}
                                 className="flex items-center gap-2.5 p-3 rounded-xl border border-stone-100 bg-stone-50 hover:bg-stone-100 transition-colors text-left min-w-0"
                             >
                                 <div

@@ -1,16 +1,15 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Flame, Search, TrendingUp } from "lucide-react";
-import FeaturedBlog from "../../components/FeaturedBlog"
-import TrendingSidebar from "../../components/trending/TrendingSidebar";
+import FeaturedBlog from "../../components/common/FeaturedBlog"
 import { useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
 import { TRENDING_BLOGS } from "../../constants/route";
-import BlogStripeList from "../../components/BlogStripeList";
+import BlogStripeList from "../../components/blog/BlogStripeList";
 import BlogSidebar from "../../components/blog/BlogSidebar";
-import Pagination from "../../components/Pagination"
-import FilterBar from "../../components/general/FilterBar";
+import Pagination from "../../components/common/Pagination"
+import FilterBar from "../../components/common/FilterBar";
 import useDebounce from "../../hooks/useDebounce";
-import SearchBar from "../../components/SearchBar";
+import SearchBar from "../../components/common/SearchBar";
 
 
 function Trending() {

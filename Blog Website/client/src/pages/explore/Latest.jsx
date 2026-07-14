@@ -2,13 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { GET_ALL_BLOGS } from "../../constants/route";
 import api from "../../api/axios";
-import BlogGrid from "../../components/BlogGrid";
+import BlogGrid from "../../components/blog/BlogGrid";
 import BlogSidebar from "../../components/blog/BlogSidebar";
-import Pagination from "../../components/Pagination"
-import FilterBar from "../../components/general/FilterBar";
+import Pagination from "../../components/common/Pagination"
+import FilterBar from "../../components/common/FilterBar";
 import useDebounce from "../../hooks/useDebounce";
-import SearchBar from "../../components/SearchBar";
-import { Search } from "lucide-react";
+import SearchBar from "../../components/common/SearchBar";
+import { Clock10Icon, Search } from "lucide-react";
 
 export default function Latest() {
     const [latestBlogs, setlatestBlogs] = useState([]);
@@ -79,14 +79,27 @@ export default function Latest() {
     <motion.div ref={contentRef} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-stone-50 mt-20">
 
         <section className="bg-white border-b border-stone-100">
-            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6 sm:pt-12 sm:pb-8">
-                <div className="mb-4">
-
-                    <h1 className="font-serif text-3xl sm:text-5xl font-bold text-stone-900 mb-3">Fresh Stories</h1>
-                    <p className="text-stone-500 text-sm sm:text-base max-w-lg">Stay updated with our latest releases.</p>
+                <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 pt-12 sm:pt-16 pb-0">
+                    <motion.div
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="text-center mb-8"
+                    >
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0077CC] bg-[#E0F0FF] px-3 py-1.5 rounded-full mb-5">
+                            <Clock10Icon size={11} />
+                            Recently Published
+                        </span>
+                        <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-stone-900 leading-tight mb-3">
+                            Read the latest articles from our community.
+                        </h1>
+                        <p className="text-stone-400 text-sm sm:text-base max-w-md mx-auto">
+                            Stay updated with our latest releases.
+                        </p>
+                    </motion.div>
                 </div>
-            </div>
-        </section>
+            </section>
+
 
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             <div className="flex flex-col lg:flex-row gap-10 items-start w-full">

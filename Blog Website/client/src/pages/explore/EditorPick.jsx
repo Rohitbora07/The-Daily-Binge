@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { FEATURED_BLOGS } from "../../constants/route";
 import api from "../../api/axios";
-import BlogGrid from "../../components/BlogGrid";
+import BlogGrid from "../../components/blog/BlogGrid";
 import BlogSidebar from "../../components/blog/BlogSidebar";
-import Pagination from "../../components/Pagination"
-import FilterBar from "../../components/general/FilterBar";
+import Pagination from "../../components/common/Pagination"
+import FilterBar from "../../components/common/FilterBar";
 import useDebounce from "../../hooks/useDebounce";
-import SearchBar from "../../components/SearchBar";
+import SearchBar from "../../components/common/SearchBar";
 
 
 

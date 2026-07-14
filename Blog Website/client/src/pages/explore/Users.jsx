@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { ALL_USERS_ROUTE } from "../../constants/route";
 import api from "../../api/axios";
-import Pagination from "../../components/Pagination"
-import FilterBar from "../../components/general/FilterBar";
+import Pagination from "../../components/common/Pagination"
+import FilterBar from "../../components/common/FilterBar";
 import useDebounce from "../../hooks/useDebounce";
-import SearchBar from "../../components/SearchBar";
-import UserGrid from "../../components/UserGrid";
+import SearchBar from "../../components/common/SearchBar";
+import UserGrid from "../../components/user/UserGrid";
 import { Search } from "lucide-react"
 
 function Users() {

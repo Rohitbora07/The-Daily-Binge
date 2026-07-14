@@ -412,6 +412,7 @@ export const getUserProfile = async (req, res) => {
     const userId = req.userId
     try {
         const { id } = req.params;
+        const { search, sort, status, period } = req.query;
 
         const page = Number(req.query.page) || 1
         const limit = Number(req.query.limit) || 15
@@ -430,15 +431,86 @@ export const getUserProfile = async (req, res) => {
 
         const filter = { author: id };
 
-        if (userId.toString() !== id) {
+        if (!userId || userId.toString() !== id) {
             filter.status = "published";
             filter.visibility = "public";
         }
 
+        if (search) {
+            filter.title = { $regex: search, $options: "i" }
+        }
+
+        if (userId && userId.toString() === id && status && status !== "all") {
+            filter.status = status;
+        }
+
+        const dateField = userId && userId.toString() === id && status === "published" ? "publishedAt" : "createdAt";
+
+        let sortOption = { createdAt: -1 };
+
+        switch (sort) {
+            case "latest":
+                sortOption = { [dateField]: -1 };
+                break;
+            case "oldest":
+                sortOption = { [dateField]: 1 };
+                break;
+            case "views":
+                sortOption = { views: -1 };
+                break;
+            case "likes":
+                sortOption = { likes: -1 };
+                break;
+            case "bookmarks":
+                sortOption = { bookmarks: -1 };
+                break;
+            case "comments":
+                sortOption = { commentsCount: -1 };
+                break;
+            case "trending":
+                sortOption = { trendingScore: -1 };
+                break;
+            default:
+                sortOption = { [dateField]: -1 };
+        }
+
+        const now = new Date();
+
+        if (period === "24h") {
+            filter[dateField] = { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) }
+        }
+
+        if (period === "yesterday") {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+
+            filter[dateField] = {
+                $gte: yesterday,
+                $lt: today
+            };
+        }
+
+        if (period === "week") {
+            filter[dateField] = { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) }
+        }
+
+        if (period === "month") {
+            filter[dateField] = { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) }
+        }
+
+        if (period === "year") {
+            filter[dateField] = { $gte: new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000) }
+        }
+
+
+
         const blogs = await Blog.find(filter)
             .select("title slug coverImage views likes commentsCount createdAt category tags")
             .populate("author", "name profileImg")
-            .sort({ createdAt: -1 }).skip(skip).limit(limit)
+            .sort(sortOption).skip(skip).limit(limit)
 
 
         const totalBlogs = await Blog.countDocuments(filter)
@@ -467,7 +539,7 @@ export const getAllUsers = async (req, res) => {
         const { search, sort } = req.query;
 
         let query = {
-            // status: "active",
+            status: "active",
             totalBlogs: { $gt: 0 },
             role: { $ne: "admin" }
         };

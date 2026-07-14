@@ -100,7 +100,7 @@ export default function BlogSidebar({ tags, categoryMap, authors, title }) {
                 </div>
                 <ul className="divide-y divide-stone-100">
                     {authors.map((author) => (
-                        <BlogAuthorCard author={author} compact />
+                        <BlogAuthorCard key={author?._id} author={author} compact />
                     ))}
                 </ul>
             </motion.div>

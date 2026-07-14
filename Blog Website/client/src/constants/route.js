@@ -5,6 +5,11 @@ export const CURRENT_USER_ROUTE = "/user/me"
 export const UPDATE_PROFILE_ROUTE = "/user/update-profile"
 export const USER_DETAIL_ROUTE = (id) => `/user/profile/${id}`
 export const ALL_USERS_ROUTE = "/user/all-users"
+export const DELETE_USER_ROUTE = "/user/delete-me"
+export const SEND_VERIFY_OTP_ROUTE = "/user/send-verification-otp"
+export const VERIFY_EMAIL_ROUTE = "/user/verify"
+export const SEND_RESET_OTP_ROUTE = "/user/send-reset-otp"
+export const RESET_PASSWORD_ROUTE = "/user/reset-password"
 
 export const CREATE_BLOG = "/blog/create"
 export const GET_ALL_BLOGS = "/blog/published/all-blogs"

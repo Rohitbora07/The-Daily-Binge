@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { Clock, ArrowRight, BookOpen } from "lucide-react";
-import BlogGrid from "../BlogGrid";
+import BlogGrid from "./BlogGrid";
 import { useNavigate } from "react-router-dom";
 
 export default function RelatedBlogs({ relatedBlogs = [], category }) {

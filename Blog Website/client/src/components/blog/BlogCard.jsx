@@ -4,12 +4,10 @@ import { useNavigate } from "react-router-dom";
 import userAuthStore from "../../store/authStore";
 import { useState } from "react";
 
-export default function BlogCard({ blog, delay = 0, onDelete }) {
+export default function BlogCard({ blog, delay = 0, onDelete, isEditable = false, setShowDeleteModal, setSelectedSlug }) {
     const navigate = useNavigate();
     const user = userAuthStore((state) => state.user);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-    const isEditable = user?._id === blog.author?._id;
 
 
 
@@ -57,8 +55,8 @@ export default function BlogCard({ blog, delay = 0, onDelete }) {
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setIsMenuOpen(false);
-                                        if (onDelete) onDelete(blog._id);
+                                        setSelectedSlug(blog.slug);
+                                        setShowDeleteModal(true);  
                                     }}
                                     className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
                                 >
