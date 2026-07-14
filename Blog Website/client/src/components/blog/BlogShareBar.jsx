@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Heart, Bookmark } from "lucide-react";
-import { FaTwitter, FaLinkedin, FaFacebook } from "react-icons/fa"
 import api from "../../api/axios";
 import { BLOG_BOOKMARK, LIKE_BLOG, CHECK_USER_BLOG_BOOKMARK, CREATE_BOOKMARK, DELETE_BOOKMARK } from "../../constants/route";
 import { useEffect } from "react";
@@ -38,7 +37,6 @@ export default function BlogShareBar({ blog, liked, setLiked }) {
     const handleBookmark = async () => {
         try {
             await api.post(CREATE_BOOKMARK(blog?._id))
-            // console.log(data)
             setBookmarked(true);
             setBookmarks(prev => prev + 1);
         } catch (error) {
@@ -48,7 +46,6 @@ export default function BlogShareBar({ blog, liked, setLiked }) {
     const handleRemoveBookmark = async () => {
     try {
         await api.delete(DELETE_BOOKMARK(blog?._id))
-        // console.log(data)
         setBookmarked(false);
         setBookmarks(prev => prev - 1);
     } catch (error) {
@@ -61,9 +58,8 @@ export default function BlogShareBar({ blog, liked, setLiked }) {
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.25 }}
-            className="flex flex-row lg:flex-col items-center gap-3"
+            className="flex flex-row lg:flex-col items-center gap-3 items-center justify-center lg:justify-start w-full lg:w-auto   "
         >
-            {/* Like */}
             <div className="flex flex-col items-center gap-1">
                 <motion.button
                     whileHover={{ scale: 1.12 }}
@@ -79,7 +75,6 @@ export default function BlogShareBar({ blog, liked, setLiked }) {
                 <span className="text-[10px] font-medium text-stone-400">{likes}</span>
             </div>
 
-            {/* Bookmark */}
             <div className="flex flex-col items-center gap-1">
                 <motion.button
                     whileHover={{ scale: 1.12 }}
@@ -94,37 +89,6 @@ export default function BlogShareBar({ blog, liked, setLiked }) {
                 </motion.button>
                 <span className="text-[10px] font-medium text-stone-400">{bookmarks}</span>
             </div>
-
-            <div className="w-full h-px bg-stone-100 hidden lg:block" />
-
-            {/* Twitter */}
-            <motion.button
-                whileHover={{ scale: 1.12 }}
-                whileTap={{ scale: 0.9 }}
-                className="w-10 h-10 flex items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-400 hover:border-stone-300 hover:text-stone-700 transition-all"
-            >
-                <FaTwitter size={15} />
-            </motion.button>
-
-            {/* LinkedIn */}
-            <motion.button
-                whileHover={{ scale: 1.12 }}
-                whileTap={{ scale: 0.9 }}
-                className="w-10 h-10 flex items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-400 hover:border-stone-300 hover:text-stone-700 transition-all"
-            >
-                <FaLinkedin size={15} />
-            </motion.button>
-
-            {/* Facebook */}
-            <motion.button
-                whileHover={{ scale: 1.12 }}
-                whileTap={{ scale: 0.9 }}
-                className="w-10 h-10 flex items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-400 hover:border-stone-300 hover:text-stone-700 transition-all"
-            >
-                <FaFacebook size={15} />
-            </motion.button>
-
-            <div className="w-full h-px bg-stone-100 hidden lg:block" />
 
 
         </motion.div>

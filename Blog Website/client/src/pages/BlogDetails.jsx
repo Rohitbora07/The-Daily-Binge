@@ -6,7 +6,7 @@ import BlogComments from "../components/comments/BlogComments";
 import RelatedBlogs from "../components/blog/RelatedBlogs";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { GET_SINGLE_BLOG, VIEW_INC } from "../constants/route";
+import { GET_SINGLE_BLOG, VIEW_INC, BLOGS_BY_CATEGORY } from "../constants/route";
 import api from "../api/axios";
 import BlogContent from "../components/blog/BlogContent";
 
@@ -17,16 +17,18 @@ export default function BlogDetails() {
     const [blog, setBlog] = useState(null)
     const [author, setAuthor] = useState(null)
     const [liked, setLiked] = useState(false)
+    const [similarBlogs, setSimilarBlogs] = useState([])
 
     useEffect(() => {
         const getSingleBlog = async () => {
             try {
                 const { data } = await api.get(GET_SINGLE_BLOG(slug))
+                const {data: similar} = await api.get(`${BLOGS_BY_CATEGORY(data.blog.category)}?limit=3`)
+                setSimilarBlogs(similar.blogs.filter(b => b._id !== data.blog._id))
                 console.log(data)
                 setLiked(data.isLiked)
                 setBlog(data.blog)
                 setAuthor(data.blog.author)
-                // 
             } catch (error) {
                 console.log(error)
             }
@@ -61,7 +63,7 @@ export default function BlogDetails() {
             className="min-h-screen bg-white mt-28"
         >
 
-            {/* Hero */}
+
             <motion.section
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -69,22 +71,21 @@ export default function BlogDetails() {
                 className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 pt-12 pb-8"
             >
                 <div className="max-w-3xl mx-auto text-center">
-                    {/* Category */}
+
                     <span className="inline-block text-xs font-bold text-[#0077CC] bg-[#E0F0FF] px-3 py-1.5 rounded-full mb-5 uppercase tracking-wider">
                         {blog.category}
                     </span>
 
-                    {/* Title */}
+ 
                     <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-stone-900 leading-tight mb-5">
                         {blog.title}
                     </h1>
 
-                    {/* Subtitle */}
+
                     <p className="text-stone-500 text-lg leading-relaxed mb-8 max-w-2xl mx-auto">
                         {blog.excerpt}
                     </p>
 
-                    {/* Author + meta row */}
                     <div className="flex items-center justify-center gap-4 flex-wrap">
                         <div className="flex items-center gap-3">
                             <img
@@ -120,7 +121,7 @@ export default function BlogDetails() {
                 </div>
             </motion.section>
 
-            {/* Cover image */}
+
             <motion.div
                 initial={{ opacity: 0, scale: 0.99 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -136,19 +137,18 @@ export default function BlogDetails() {
                 </div>
             </motion.div>
 
-            {/* Body: share | div | toc */}
             <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10">
                 <div className="flex gap-8 xl:gap-14 items-center justify-center">
 
-                    {/* Share bar — left sticky column */}
+
                     <div className="hidden lg:flex flex-col items-center sticky top-20 flex-shrink-0 pt-2">
                         <BlogShareBar blog={blog} liked={liked} setLiked={setLiked} />
                     </div>
 
-                    {/* div body */}
+
                     <div className="flex-1 min-w-0 max-w-5xl">
 
-                        {/* Mobile share bar */}
+
                         <div className="flex lg:hidden items-center gap-3 mb-8 pb-6 border-b border-stone-100">
                             <BlogShareBar blog={blog} liked={liked} setLiked={setLiked} />
                         </div>
@@ -159,11 +159,9 @@ export default function BlogDetails() {
                             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
                         >
 
-                            {/* <BlogContent content={blog.content} /> */}
                             <BlogContent content={JSON.parse(blog.content)} />
                         </div>
 
-                        {/* Tags */}
                         <div className="flex flex-wrap gap-2 mt-10 pt-8 border-t border-stone-100">
                             {blog.tags.map((tag) => (
                                 <button
@@ -179,11 +177,11 @@ export default function BlogDetails() {
                             <BlogAuthorCard author={author} />
                         </div>
 
-                        {/* Comments */}
+
                         <BlogComments blog={blog} />
 
-                        {/* Related */}
-                        <RelatedBlogs />
+
+                        <RelatedBlogs relatedBlogs={similarBlogs} category={blog.category} />
 
                         <div className="h-16" />
                     </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Search, TrendingUp, Sparkles, Clock10Icon, Users } from "lucide-react";
+import { Search, TrendingUp, Sparkles, Clock10Icon, Users, Star } from "lucide-react";
 import BlogCardFeatured from "../components/blog/BlogCardFeatured";
 import BlogSidebar from "../components/blog/BlogSidebar";
 import { GET_ALL_BLOGS, TRENDING_BLOGS, FEATURED_BLOGS, ALL_USERS_ROUTE } from "../constants/route";
@@ -8,6 +8,7 @@ import api from "../api/axios";
 import TitleBar from "../components/TitleBar";
 import BlogGrid from "../components/BlogGrid";
 import UserGrid from "../components/UserGrid";
+
 
 
 export default function BlogListing() {
@@ -93,7 +94,7 @@ export default function BlogListing() {
             <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-10">
                 {blogs && (
                     <div className="mb-8 md:mb-12">
-                        <BlogCardFeatured blog={blogs[0]} />
+                        <BlogCardFeatured blog={blogs[0]} title="Featured Article" Icon={Star} />
                     </div>
                 )}
 
