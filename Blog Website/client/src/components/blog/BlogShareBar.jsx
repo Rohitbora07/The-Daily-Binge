@@ -12,14 +12,12 @@ export default function BlogShareBar({ blog, liked, setLiked }) {
 
     const handleLike = async () => {
         try {
-            console.log(blog)
-            console.log(blog?._id)
+
             const { data } = await api.post(LIKE_BLOG(blog?._id))
             setLiked(data.isLiked)
             setLikes(data.likes)
-            console.log(data)
         } catch (error) {
-            console.log(error.response.data.message)
+            console.error("Error occurred while liking the blog:", error);
         }
     }
 
@@ -28,8 +26,6 @@ export default function BlogShareBar({ blog, liked, setLiked }) {
             const { data } = await api.get(BLOG_BOOKMARK(blog?._id))
             const { data: check } = await api.get(CHECK_USER_BLOG_BOOKMARK(blog?._id))
             setBookmarked(check.isBookmarked)
-            console.log(check.isBookmarked)
-            console.log(data)
         }
         getBookmarks()
     }, [blog?._id])
