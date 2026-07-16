@@ -1,6 +1,7 @@
 
 export const LOGIN_ROUTE = "/user/login"
 export const SIGNUP_ROUTE = "/user/register"
+export const LOGOUT_ROUTE = "/user/logout"
 export const CURRENT_USER_ROUTE = "/user/me"
 export const UPDATE_PROFILE_ROUTE = "/user/update-profile"
 export const USER_DETAIL_ROUTE = (id) => `/user/profile/${id}`

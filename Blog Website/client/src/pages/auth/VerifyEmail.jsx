@@ -70,7 +70,7 @@ export default function VerifyEmail() {
                                 className="text-center"
                             >
                                 <span className="font-serif font-extrabold italic text-2xl tracking-tight text-[#0077CC] block">
-                                    The Daily Binge
+                                    Listly
                                 </span>
                                 <h2 className="mt-1 text-2xl font-serif font-normal tracking-tight text-stone-900">
                                     {step === 1 ? "Verify Your Account" : "Enter Security Code"}

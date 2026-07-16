@@ -1,34 +1,25 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-    ChevronRight, 
-    Menu, 
-    PenSquare, 
-    X, 
-    LogOut, 
-    Settings, 
-    User, 
-    ShieldAlert, 
-    ChevronDown 
-} from "lucide-react";
+import { ChevronRight, Menu, PenSquare, X, LogOut, Settings, User, ShieldAlert, ChevronDown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import userAuthStore from "../../store/authStore";
 import api from "../../api/axios";
-import { CURRENT_USER_ROUTE } from "../../constants/route";
+import { CURRENT_USER_ROUTE, LOGOUT_ROUTE } from "../../constants/route";
+import { toast } from "react-toastify";
 
 function Navbar() {
     const navigate = useNavigate();
     const location = useLocation();
-    
+
     const [profileMenuOpen, setProfileMenuOpen] = useState(false);
     const [adminMenuOpen, setAdminMenuOpen] = useState(false);
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
     const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
-    
+
     const user = userAuthStore((state) => state.user);
     const setUser = userAuthStore((state) => state.setUser);
 
-    // Safeguard to check if current logged-in user is an admin
+
     const isAdmin = user?.role === "admin" || user?.isAdmin === true;
 
     const ROUTES_CONFIG = [
@@ -58,7 +49,7 @@ function Navbar() {
         currentUser();
     }, [setUser]);
 
-    // Close dropdowns when clicking outside
+
     useEffect(() => {
         const handleOutsideClick = () => {
             setProfileMenuOpen(false);
@@ -68,10 +59,22 @@ function Navbar() {
         return () => window.removeEventListener("click", handleOutsideClick);
     }, []);
 
+    const handleLogout = async () => {
+        try {
+            const { data } = await api.post(LOGOUT_ROUTE);
+            console.log(data);
+            toast.success(data.message);
+            localStorage.removeItem("auth-storage");
+            setUser(null);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "An error occurred during logout.");
+        }
+    }
+
     const getProfileMenuActions = () => [
         { title: "Profile", path: `/profile/${user?._id}`, icon: <User size={18} />, type: "link" },
         { title: "Settings", path: "/profile/update", icon: <Settings size={18} />, type: "link" },
-        { title: "Sign Out", path: "/sign-out", icon: <LogOut size={18} />, type: "signout", className: "text-red-600 hover:bg-red-50" }
+        // { title: "Sign Out", path: "/sign-out", icon: <LogOut size={18} />, type: "signout", className: "text-red-600 hover:bg-red-50" }
     ];
 
     const handleProfileClick = (e) => {
@@ -119,9 +122,8 @@ function Navbar() {
                                     key={link.title}
                                     whileHover={{ scale: 1.02 }}
                                     onClick={() => navigate(link.path)}
-                                    className={`relative cursor-pointer rounded-2xl px-4 py-2 text-sm font-medium transition-colors z-10 ${
-                                        isActive ? "text-stone-900" : "text-stone-500 hover:text-stone-900"
-                                    }`}
+                                    className={`relative cursor-pointer rounded-2xl px-4 py-2 text-sm font-medium transition-colors z-10 ${isActive ? "text-stone-900" : "text-stone-500 hover:text-stone-900"
+                                        }`}
                                 >
                                     {link.title}
                                     {isActive && (
@@ -140,11 +142,10 @@ function Navbar() {
                             <div className="relative ml-2 border-l border-stone-200 pl-2">
                                 <button
                                     onClick={handleAdminClick}
-                                    className={`flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition-colors ${
-                                        adminMenuOpen || location.pathname.startsWith("/admin") 
-                                            ? "bg-[#0077CC]/10 text-[#0077CC]" 
+                                    className={`flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition-colors ${adminMenuOpen || location.pathname.startsWith("/admin")
+                                            ? "bg-[#0077CC]/10 text-[#0077CC]"
                                             : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
-                                    }`}
+                                        }`}
                                 >
                                     <ShieldAlert size={15} />
                                     Admin
@@ -217,21 +218,32 @@ function Navbar() {
                                     >
                                         {getProfileMenuActions().map((action) => (
                                             <div key={action.title}>
-                                                {action.type === "signout" && <hr className="border-stone-100 my-1" />}
+                                                
                                                 <button
                                                     onClick={() => {
                                                         setProfileMenuOpen(false);
                                                         navigate(action.path);
                                                     }}
-                                                    className={`flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm transition-colors ${
-                                                        action.className || "text-stone-700 hover:bg-stone-100"
-                                                    }`}
+                                                    className={`flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm transition-colors ${action.className || "text-stone-700 hover:bg-stone-100"
+                                                        }`}
                                                 >
                                                     {action.icon}
                                                     {action.title}
                                                 </button>
                                             </div>
+
                                         ))}
+                                        <hr className="border-stone-100 my-1" />
+                                        <button
+                                            onClick={() => {
+                                                setProfileMenuOpen(false);
+                                                handleLogout();
+                                            }}
+                                            className={`flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm transition-colors text-red-600 hover:bg-red-50`}
+                                        >
+                                            <LogOut size={16} />
+                                            Sign Out
+                                        </button>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -332,9 +344,8 @@ function Navbar() {
                                         setIsMobileProfileOpen(false);
                                         navigate(action.path);
                                     }}
-                                    className={`flex items-center gap-3 rounded-2xl px-4 py-3.5 text-left font-medium text-base transition-colors ${
-                                        action.type === "signout" ? "bg-red-50 text-red-600 mt-2" : "text-stone-700 hover:bg-stone-50"
-                                    }`}
+                                    className={`flex items-center gap-3 rounded-2xl px-4 py-3.5 text-left font-medium text-base transition-colors ${action.type === "signout" ? "bg-red-50 text-red-600 mt-2" : "text-stone-700 hover:bg-stone-50"
+                                        }`}
                                 >
                                     {action.icon}
                                     {action.title}

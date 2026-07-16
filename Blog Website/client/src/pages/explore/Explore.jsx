@@ -9,64 +9,50 @@ import TitleBar from "../../components/common/TitleBar";
 import BlogGrid from "../../components/blog/BlogGrid";
 import UserGrid from "../../components/user/UserGrid";
 
-
-
 export default function BlogListing() {
-
-    const [blogs, setBlogs] = useState(null)
-    const [todayTrendingBlogs, setTodayTrendingBlogs] = useState(null)
-    const [latestBlogs, setLatestBlogs] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [users, setUsers] = useState(null)
-
-
-    // const navigate = useNavigate()
+    const [blogs, setBlogs] = useState([]);
+    const [todayTrendingBlogs, setTodayTrendingBlogs] = useState([]);
+    const [latestBlogs, setLatestBlogs] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const getAll = async () => {
             try {
-                const { data } = await api.get(FEATURED_BLOGS)
-                const { data: trend } = await api.get(`${TRENDING_BLOGS}?range=24h`)
-                const { data: latest } = await api.get(`${GET_ALL_BLOGS}?range=24h`)
-                const { data: users } = await api.get(`${ALL_USERS_ROUTE}?limit=3`)
-                setLatestBlogs(latest.blogs)
-                setTodayTrendingBlogs(trend.blogs)
-                setUsers(users.users)
-                console.log("data", data)
-                setBlogs(data.blogs)
+                const [featuredRes, trendingRes, latestRes, usersRes] = await Promise.allSettled([
+                    api.get(FEATURED_BLOGS),
+                    api.get(`${TRENDING_BLOGS}?range=24h`),
+                    api.get(`${GET_ALL_BLOGS}?range=24h`),
+                    api.get(`${ALL_USERS_ROUTE}?limit=3`)
+                ]);
+
+                if (latestRes.status === "fulfilled") setLatestBlogs(latestRes.value.data?.blogs || []);
+                if (trendingRes.status === "fulfilled") setTodayTrendingBlogs(trendingRes.value.data?.blogs || []);
+                if (usersRes.status === "fulfilled") setUsers(usersRes.value.data?.users || []);
+                if (featuredRes.status === "fulfilled") setBlogs(featuredRes.value.data?.blogs || []);
             } catch (error) {
-                console.log(error)
+                console.error(error);
+            } finally {
+                setLoading(false);
             }
-        }
-        getAll()
-    }, [])
+        };
+        getAll();
+    }, []);
 
-
-
-
-
-
-    const tags = blogs ? [...new Set(blogs.map(blog => blog.tags).flat())].slice(0, 20) : [];
-    const authors = blogs ? [...new Map(blogs.map(blog => [blog.author._id,blog.author])).values()] : []
-    const categoryMap = new Map()
-    if (blogs) {
-        for (const item of blogs) {
-            const categ = item.category;
-            categoryMap.set(categ, (categoryMap.get(categ) || 0) + 1)
-        }
+    const tags = blogs.length > 0 ? [...new Set(blogs.map(blog => blog.tags).flat())].slice(0, 20) : [];
+    const authors = blogs.length > 0 ? [...new Map(blogs.map(blog => [blog.author?._id, blog.author])).values()] : [];
+    const categoryMap = new Map();
+    
+    for (const item of blogs) {
+        const categ = item.category;
+        categoryMap.set(categ, (categoryMap.get(categ) || 0) + 1);
     }
 
-
-
-    console.log(tags)
-
-    if (!blogs) {
-        return (
-            <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0077CC]"></div>
-            </div>
-        );
-    }
+    const SectionSpinner = () => (
+        <div className="flex items-center justify-center py-12 w-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#0077CC]"></div>
+        </div>
+    );
 
     return (
         <motion.div
@@ -92,7 +78,7 @@ export default function BlogListing() {
             </section>
 
             <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-10">
-                {blogs && (
+                {!loading && blogs.length > 0 && (
                     <div className="mb-8 md:mb-12">
                         <BlogCardFeatured blog={blogs[0]} title="Featured Article" Icon={Star} />
                     </div>
@@ -100,11 +86,14 @@ export default function BlogListing() {
 
                 <div className="flex flex-col lg:flex-row gap-8 xl:gap-12 items-start">
                     <div className="w-full flex-1 min-w-0 order-1">
+                        
                         <TitleBar Icon={Clock10Icon} title="Latest Articles" destination={`/explore/latest`} />
                         <AnimatePresence mode="wait">
-                            {latestBlogs.length === 0 ? (
+                            {loading ? (
+                                <SectionSpinner />
+                            ) : latestBlogs.length === 0 ? (
                                 <motion.div
-                                    key="empty"
+                                    key="empty-latest"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
@@ -113,9 +102,7 @@ export default function BlogListing() {
                                     <div className="w-14 h-14 rounded-2xl bg-stone-100 flex items-center justify-center mb-4">
                                         <Search size={22} className="text-stone-300" />
                                     </div>
-                                    <h3 className="text-stone-700 font-semibold mb-1">
-                                        No articles found
-                                    </h3>
+                                    <h3 className="text-stone-700 font-semibold mb-1">No articles found</h3>
                                 </motion.div>
                             ) : (
                                 <BlogGrid blogs={latestBlogs} sliceLimit={3} />
@@ -124,9 +111,11 @@ export default function BlogListing() {
 
                         <TitleBar Icon={TrendingUp} title="Trending Articles" destination={`/explore/trending`} />
                         <AnimatePresence mode="wait">
-                            {todayTrendingBlogs.length === 0 ? (
+                            {loading ? (
+                                <SectionSpinner />
+                            ) : todayTrendingBlogs.length === 0 ? (
                                 <motion.div
-                                    key="empty"
+                                    key="empty-trending"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
@@ -135,9 +124,7 @@ export default function BlogListing() {
                                     <div className="w-14 h-14 rounded-2xl bg-stone-100 flex items-center justify-center mb-4">
                                         <Search size={22} className="text-stone-300" />
                                     </div>
-                                    <h3 className="text-stone-700 font-semibold mb-1">
-                                        No articles found
-                                    </h3>
+                                    <h3 className="text-stone-700 font-semibold mb-1">No articles found</h3>
                                 </motion.div>
                             ) : (
                                 <BlogGrid blogs={todayTrendingBlogs} sliceLimit={3} />
@@ -146,9 +133,11 @@ export default function BlogListing() {
 
                         <TitleBar Icon={Sparkles} title="Editor's Pick" destination={`/explore/editor-pick`} />
                         <AnimatePresence mode="wait">
-                            {blogs.length === 0 ? (
+                            {loading ? (
+                                <SectionSpinner />
+                            ) : blogs.length === 0 ? (
                                 <motion.div
-                                    key="empty"
+                                    key="empty-editors"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
@@ -157,9 +146,7 @@ export default function BlogListing() {
                                     <div className="w-14 h-14 rounded-2xl bg-stone-100 flex items-center justify-center mb-4">
                                         <Search size={22} className="text-stone-300" />
                                     </div>
-                                    <h3 className="text-stone-700 font-semibold mb-1">
-                                        No articles found
-                                    </h3>
+                                    <h3 className="text-stone-700 font-semibold mb-1">No articles found</h3>
                                 </motion.div>
                             ) : (
                                 <BlogGrid blogs={blogs} sliceLimit={3} />
@@ -168,9 +155,11 @@ export default function BlogListing() {
 
                         <TitleBar Icon={Users} title="All Authors" destination={`/explore/authors`} />
                         <AnimatePresence mode="wait">
-                            {users?.length === 0 ? (
+                            {loading ? (
+                                <SectionSpinner />
+                            ) : users.length === 0 ? (
                                 <motion.div
-                                    key="empty"
+                                    key="empty-users"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
@@ -179,9 +168,7 @@ export default function BlogListing() {
                                     <div className="w-14 h-14 rounded-2xl bg-stone-100 flex items-center justify-center mb-4">
                                         <Search size={22} className="text-stone-300" />
                                     </div>
-                                    <h3 className="text-stone-700 font-semibold mb-1">
-                                        No articles found
-                                    </h3>
+                                    <h3 className="text-stone-700 font-semibold mb-1">No articles found</h3>
                                 </motion.div>
                             ) : (
                                 <UserGrid users={users} sliceLimit={3} />

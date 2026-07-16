@@ -10,6 +10,8 @@ import cloudinary from "../../config/cloudinary.js";
 import Bookmark from "../bookmarks/bookmark.model.js";
 import Comment from "../comments/comment.model.js";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export const userLogin = async (req, res) => {
     const { email, password } = req.body
     if (!email || !password) {
@@ -35,8 +37,9 @@ export const userLogin = async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: 'strict',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
@@ -92,8 +95,9 @@ export const userRegister = async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: 'strict',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
@@ -128,8 +132,9 @@ export const userLogout = async (req, res) => {
     try {
         res.clearCookie("token", {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: 'strict',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+            path: '/',
         })
 
         return res.status(200).json({
