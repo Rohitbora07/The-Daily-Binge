@@ -1,9 +1,20 @@
-import axios from "axios"
+import axios from "axios";
+import userAuthStore from "../store/authStore";
+
+const rawUrl = import.meta.env.VITE_BACKEND_URL || "";
+const backendUrl = rawUrl.replace(/\/+$/, "");
 
 const api = axios.create({
-    baseURL: `${import.meta.env.VITE_BACKEND_URL}/api`,
-    // timeout: 10000,
+    baseURL: backendUrl ? `${backendUrl}/api` : "/api",
     withCredentials: true,
-})
+});
 
-export default api
+api.interceptors.request.use((config) => {
+    const token = userAuthStore.getState().token;
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+export default api;

@@ -1,22 +1,24 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-
 const userAuthStore = create(
   persist(
     (set) => ({
       user: null,
+      token: null,
       isAuthenticated: false,
 
-      setUser: (user) =>
-        set({
+      setUser: (user, token = null) =>
+        set((state) => ({
           user,
-          isAuthenticated: true,
-        }),
+          token: token !== null ? token : state.token,
+          isAuthenticated: !!user,
+        })),
 
       logout: () =>
         set({
           user: null,
+          token: null,
           isAuthenticated: false,
         }),
     }),
@@ -25,6 +27,5 @@ const userAuthStore = create(
     }
   )
 );
-
 
 export default userAuthStore;

@@ -24,7 +24,7 @@ export default function LoginPage() {
             const { data } = await api.post(LOGIN_ROUTE, { email, password });
             navigate("/");
             toast.success(data.message);
-            setUser(data.user);
+            setUser(data.user, data.token);
         } catch (err) {
             toast.error(err.response?.data?.message || "An error occurred during login.");
             setError(err.response?.data?.message || "An error occurred during login.");

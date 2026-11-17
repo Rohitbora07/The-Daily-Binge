@@ -6,11 +6,11 @@ import api from "../../api/axios";
 import { SIGNUP_ROUTE } from "../../constants/route";
 import { useState } from "react";
 import { toast } from "react-toastify";
-
+import userAuthStore from "../../store/authStore";
 
 function SignUp() {
-
-    const navigate = useNavigate()
+    const setUser = userAuthStore((state) => state.setUser);
+    const navigate = useNavigate();
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [name, setName] = useState("")
@@ -25,6 +25,9 @@ function SignUp() {
             const { data } = await api.post(SIGNUP_ROUTE, {
                 name, email, password
             })
+            if (data.token) {
+                setUser(data.user, data.token);
+            }
             navigate("/verify-email")
             toast.success(data.message)
         } catch (err) {

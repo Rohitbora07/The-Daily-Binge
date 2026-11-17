@@ -46,6 +46,7 @@ export const userLogin = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Login successful",
+            token,
             user: {
                 id: user._id,
                 email: user.email,
@@ -101,16 +102,21 @@ export const userRegister = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
-        const html = welcomeEmailTemplate(user.name, user.email)
-        await sendMail(
-            email,
-            "Welcome To The Daily Binge",
-            html
-        )
+        try {
+            const html = welcomeEmailTemplate(user.name, user.email)
+            await sendMail(
+                email,
+                "Welcome To The Daily Binge",
+                html
+            )
+        } catch (mailErr) {
+            console.error("Welcome email failed to send (non-critical):", mailErr.message);
+        }
 
         return res.status(200).json({
             success: true,
             message: "User created successfully",
+            token,
             user: {
                 id: user._id,
                 email: user.email,
